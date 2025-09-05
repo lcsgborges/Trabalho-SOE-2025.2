@@ -24,10 +24,8 @@ Onde aplicável, cada pasta possuirá seu próprio readme.
 As pastas possuem nomes autodescritivos, todavia, essa seção busca 
 brevemente explicar onde encontrar informações e documentação.
 
+## Download do documento
+
+[Baixar PDF](https://github.com/lcsgborges/Trabalho-SOE-2025.2/tree/main/docs/relatorio_pc1.pdf)
+
 <!--EXPANDIR CONFORME TRABALHOS REALIZADOS-->
-
-
-
-
-
-
