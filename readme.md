@@ -2,8 +2,8 @@
 
 ## Integrantes
 
-Lucas - INSERIR MATRÍCULA
-Ryan Salles - 221008436
+- Lucas Guimarães - 222015159
+- Ryan Salles - 221008436
 
 ## Introdução - O que é esse repositório
 
