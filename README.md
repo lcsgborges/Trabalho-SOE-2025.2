@@ -1,4 +1,4 @@
-# SOE
+# Sistemas Operacionais Embarcados
 
 ## Integrantes
 
