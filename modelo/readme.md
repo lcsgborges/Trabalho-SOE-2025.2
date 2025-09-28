@@ -11,3 +11,7 @@ O tensorflow é capaz de consumir uma quantidade infeliz de recursos
 computacionais e, portanto, os arquivos aqui presentes serão melhor 
 utilizados rodando no google colab ou outro provedor de recursos.
 
+Also, this is mostly an english-portuguese endeavor. When english
+suits the purpose best, it WILL be used. Deal with it in the best
+way possible, please. 
+

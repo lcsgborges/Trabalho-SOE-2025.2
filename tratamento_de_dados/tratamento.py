@@ -89,7 +89,7 @@ def nanfinder(i: int, df: pd.DataFrame):
     
 
 def main():
-    # the loading.
+    # 1. the loading.
     # for whatever reason, prolly because these
     # jackasses thought it would be a good idea to 
     # use SEMICOLONS in the COMMA SEPARATED VALUES
@@ -111,6 +111,8 @@ def main():
     print(df4.head())
     print(df4.tail())
     """
+
+    #this step is to devise some test functions for the 
 
     
     for key in df1.loc[0].index:
