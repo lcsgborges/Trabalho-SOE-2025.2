@@ -15,3 +15,8 @@ Also, this is mostly an english-portuguese endeavor. When english
 suits the purpose best, it WILL be used. Deal with it in the best
 way possible, please. 
 
+The model will be following mostly this tutorial from tensorflow:
+    https://www.tensorflow.org/tutorials/structured_data/time_series#multi-step_models
+
+
+

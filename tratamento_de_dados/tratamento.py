@@ -94,8 +94,13 @@
                 as the csv exported uses 
                 COMMAS to indicate the 
                 floats, we need to set
-                the thousands variable 
-                or else!
+                the decimal variable to "," 
+                so read_csv automatically
+                recognizes values.
+            
+            Then setting date is simple task
+            of indicatives. Set the format 
+            and the correct column
 
         3.3. The inspection.
             Its an exploratory step to test
@@ -116,7 +121,8 @@
             The approach is simple -> every .csv we 
             got works about the same. Then, if they're
             quite similar, if we find an approach that
-            works for one, the others may be handled if 
+            works for one, the others may be handled 
+            the same or mostly the same. 
 
         3.4. nan sniffing in a row
             Simple steps. We just return the keys with 
@@ -172,14 +178,19 @@ def nanhandler(df: pd.DataFrame) -> None:
         mean between the before and after re-
         cords. 
     """
-
+    # go through every record
     for i in range(len(df)):
+        #in every record, find the nans
         nankeys = nanfinder(i, df)
+
+        #hey, we've got some. Then,
         for key in nankeys:
             if key == RADKEY:
+                #rads get set to 0.
                 df.loc[i, RADKEY] = 0
+            # temps get set 
             else:
-                if i > 0 and i < len(df) - 1:
+                if i > 0 and i < len(df) - 1 and key not in ["Data", "Hora (UTC)" ]:
                     df.loc[i, key] = (df.loc[i-1,key] + df.loc[i+1,key])/2
 
 
@@ -232,10 +243,10 @@ def testmain():
         stuff.  
     
     """
-    df1 = pd.read_csv(FILE1, sep=";")
-    df2 = pd.read_csv(FILE2, sep=";")
-    df3 = pd.read_csv(FILE3, sep=";")
-    df4 = pd.read_csv(FILE4, sep=";")
+    df1 = pd.read_csv(FILE1, sep=";", thousands=",")
+    df2 = pd.read_csv(FILE2, sep=";", thousands=",")
+    df3 = pd.read_csv(FILE3, sep=";", thousands=",")
+    df4 = pd.read_csv(FILE4, sep=";", thousands=",")
 
     print(df1.head())
     print(df1.info)
@@ -256,16 +267,18 @@ def main():
     # format, sep needs to be ; or else. Anyway,
 
     #THIS IS OUR DATA, THE TARGET OF THIS SCRIPT!
-    df1 = pd.read_csv(FILE1, sep=";", thousands=",")
-    df2 = pd.read_csv(FILE2, sep=";", thousands=",")
-    df3 = pd.read_csv(FILE3, sep=";", thousands=",")
-    df4 = pd.read_csv(FILE4, sep=";", thousands=",")
+    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
 
-    # inspection step!
+    # 2. inspection step!
     runinspection(df1)
 
-    # the processing
-    #nanhandler(df1)
+    # 3. the processing
+    nanhandler(df1)
+
+    #
     # the merging
 
     # the saving
