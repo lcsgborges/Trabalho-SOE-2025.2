@@ -16,7 +16,10 @@ suits the purpose best, it WILL be used. Deal with it in the best
 way possible, please. 
 
 The model will be following mostly this tutorial from tensorflow:
-    https://www.tensorflow.org/tutorials/structured_data/time_series#multi-step_models
 
+- [Time series network](https://www.tensorflow.org/tutorials/structured_data/time_series#multi-step_models)
+
+Good news is the pavement is already set for our work, we just need this data
+and setting up the model things. Not bad at all.
 
 
