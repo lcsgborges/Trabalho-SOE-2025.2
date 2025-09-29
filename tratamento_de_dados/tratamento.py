@@ -72,6 +72,12 @@
             entrypoint. anything outside main WILL NOT be 
             called.
 
+            testmain serves to move fast and break shit up.
+            DO NOT run testmain if you plan on getting
+            something useful, the purpose of testing
+            is acquiring knowledge on operations of
+            the libraries we're using!
+
         3.2. Loading the .csv's
             FOR SOME FUCKING REASON inmet decided they
             would export the COMMA SEPARATED VALUES
@@ -83,6 +89,13 @@
 
             That said, its an easy fix. sep=";". 
             there, done.
+
+            Also, new mikefoxtrot found -> 
+                as the csv exported uses 
+                COMMAS to indicate the 
+                floats, we need to set
+                the thousands variable 
+                or else!
 
         3.3. The inspection.
             Its an exploratory step to test
@@ -212,6 +225,28 @@ def runinspection(df1: pd.DataFrame) -> None:
     print(df1.describe()) 
 
 
+def testmain():
+    """
+        This function is another entrypoint,
+        this time to test some functions and 
+        stuff.  
+    
+    """
+    df1 = pd.read_csv(FILE1, sep=";")
+    df2 = pd.read_csv(FILE2, sep=";")
+    df3 = pd.read_csv(FILE3, sep=";")
+    df4 = pd.read_csv(FILE4, sep=";")
+
+    print(df1.head())
+    print(df1.info)
+    newtemp = df1["Temp. Ins. (C)"]
+    newtemp = pd.to_numeric(newtemp)
+    df1.update(newtemp)
+    print(df1.head())
+    print(df1.info)
+    
+
+    exit(0)
 
 def main():
     # 1. the loading.
@@ -221,10 +256,10 @@ def main():
     # format, sep needs to be ; or else. Anyway,
 
     #THIS IS OUR DATA, THE TARGET OF THIS SCRIPT!
-    df1 = pd.read_csv(FILE1, sep=";")
-    df2 = pd.read_csv(FILE2, sep=";")
-    df3 = pd.read_csv(FILE3, sep=";")
-    df4 = pd.read_csv(FILE4, sep=";")
+    df1 = pd.read_csv(FILE1, sep=";", thousands=",")
+    df2 = pd.read_csv(FILE2, sep=";", thousands=",")
+    df3 = pd.read_csv(FILE3, sep=";", thousands=",")
+    df4 = pd.read_csv(FILE4, sep=";", thousands=",")
 
     # inspection step!
     runinspection(df1)
@@ -241,7 +276,8 @@ def main():
  
 
 if __name__ == "__main__":
-    #print("DATA TREATMENT SCRIPT RUNNNING")
+    #choose one. comment the other. don't run both.
+    #testmain()
     main()
     
 
