@@ -181,17 +181,22 @@ def nanhandler(df: pd.DataFrame) -> None:
     # go through every record
     for i in range(len(df)):
         #in every record, find the nans
-        nankeys = nanfinder(i, df)
+        nankeys : list[str] = nanfinder(i, df)
+        #if len(nankeys) > 1:
+        #    print(nankeys)
+        #    input("press enter")
 
         #hey, we've got some. Then,
         for key in nankeys:
             if key == RADKEY:
+                #print("nan in rads")
                 #rads get set to 0.
                 df.loc[i, RADKEY] = 0
             # temps get set 
             else:
                 if i > 0 and i < len(df) - 1 and key not in ["Data", "Hora (UTC)" ]:
                     df.loc[i, key] = (df.loc[i-1,key] + df.loc[i+1,key])/2
+        #print(df.loc[i])
 
 
 
@@ -202,13 +207,14 @@ def nanfinder(i: int, df: pd.DataFrame) -> list[str]:
         returns in a nice enough list. 
     """
     
-    itter = df.loc[0].index
+    itter = df.loc[i].index
     foundkeys: list[str] = []
     for key in itter:
-            zed = str(df.loc[0][key])
+            zed = str(df.loc[i][key])
+            #print(zed)
             if zed == "nan":
                 foundkeys.append(key)
-
+    
     return foundkeys
     
     
@@ -221,10 +227,10 @@ def runinspection(df1: pd.DataFrame) -> None:
     print(df1.head())
 
     #THERE WE FUCKING GO!
-    print(df1.loc[1, "Radiacao (KJ/m²)"])
-    df1.loc[1, "Radiacao (KJ/m²)"] = 0
-    print(df1.loc[1, "Radiacao (KJ/m²)"])
-    print("---------------->THISLINEBLANKONPURPOSE")
+    #print(df1.loc[1, "Radiacao (KJ/m²)"])
+    #df1.loc[1, "Radiacao (KJ/m²)"] = 0
+    #print(df1.loc[1, "Radiacao (KJ/m²)"])
+    #print("---------------->THISLINEBLANKONPURPOSE")
     
     print("inspecting types!")
 
@@ -243,10 +249,10 @@ def testmain():
         stuff.  
     
     """
-    df1 = pd.read_csv(FILE1, sep=";", thousands=",")
-    df2 = pd.read_csv(FILE2, sep=";", thousands=",")
-    df3 = pd.read_csv(FILE3, sep=";", thousands=",")
-    df4 = pd.read_csv(FILE4, sep=";", thousands=",")
+    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
 
     print(df1.head())
     print(df1.info)
@@ -273,14 +279,26 @@ def main():
     df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
 
     # 2. inspection step!
-    runinspection(df1)
+    print(df1.info())
+    print(df2.info())
+    print(df3.info())
+    print(df4.info())
 
-    # 3. the processing
+    # 3. process
     nanhandler(df1)
+    nanhandler(df2)
+    nanhandler(df3)
+    nanhandler(df4)
 
-    #
+    # 4. second inspection.
+    print(df1.info())
+    print(df2.info())
+    print(df3.info())
+    print(df4.info())
+
     # the merging
-
+    bigdf = pd.DataFrame()
+    
     # the saving
 
     # done :>
