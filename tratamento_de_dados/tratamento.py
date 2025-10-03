@@ -143,11 +143,14 @@
 import pandas as pd
 import numpy as np
 
-RADKEY = "Radiacao (KJ/m²)"
-FILE1 = "./data1-01012023-29062023.csv"
-FILE2 = "./data2-30062023-30122023.csv"
-FILE3 = "./data3-01012024-29062024.csv"
-FILE4 = "./data4-30062024-30122024.csv"
+RADKEY  = "Radiacao (KJ/m²)"
+DEBUG   = 1
+INSPECT = 0
+FILE1   = "./data1-01012023-29062023.csv"
+FILE2   = "./data2-30062023-30122023.csv"
+FILE3   = "./data3-01012024-29062024.csv"
+FILE4   = "./data4-30062024-30122024.csv"
+TARGET  = "./dataset1.csv"
 
 def dropper(df: pd.DataFrame) -> None:
     """
@@ -181,17 +184,39 @@ def nanhandler(df: pd.DataFrame) -> None:
     # go through every record
     for i in range(len(df)):
         #in every record, find the nans
-        nankeys = nanfinder(i, df)
+        nankeys : list[str] = nanfinder(i, df)
+        #if len(nankeys) > 1:
+        #    print(nankeys)
+        #    input("press enter")
 
         #hey, we've got some. Then,
+        if len(nankeys) > 1 and DEBUG == 1:
+                print("RUNNING FOR I = ", i)
+                print("before processing:")
+                ##
+                print(df.loc[i-1])
+                print(df.loc[i])
+                print(df.loc[i+1])
         for key in nankeys:
+            
             if key == RADKEY:
+                #print("nan in rads")
                 #rads get set to 0.
                 df.loc[i, RADKEY] = 0
-            # temps get set 
-            else:
+            # temps get set based on last and next 
+            else: 
                 if i > 0 and i < len(df) - 1 and key not in ["Data", "Hora (UTC)" ]:
+
                     df.loc[i, key] = (df.loc[i-1,key] + df.loc[i+1,key])/2
+
+        if len(nankeys) > 1 and DEBUG == 1:
+                print("RUNNING FOR I = ", i)
+                print("after processing:")
+                ##
+                print(df.loc[i-1])
+                print(df.loc[i])
+                print(df.loc[i+1])
+        #print(df.loc[i])
 
 
 
@@ -202,14 +227,16 @@ def nanfinder(i: int, df: pd.DataFrame) -> list[str]:
         returns in a nice enough list. 
     """
     
-    itter = df.loc[0].index
+    itter = df.loc[i].index
     foundkeys: list[str] = []
     for key in itter:
-            zed = str(df.loc[0][key])
+            zed = str(df.loc[i][key])
             if zed == "nan":
                 foundkeys.append(key)
-
+    
     return foundkeys
+
+
     
     
 def runinspection(df1: pd.DataFrame) -> None:
@@ -221,10 +248,10 @@ def runinspection(df1: pd.DataFrame) -> None:
     print(df1.head())
 
     #THERE WE FUCKING GO!
-    print(df1.loc[1, "Radiacao (KJ/m²)"])
-    df1.loc[1, "Radiacao (KJ/m²)"] = 0
-    print(df1.loc[1, "Radiacao (KJ/m²)"])
-    print("---------------->THISLINEBLANKONPURPOSE")
+    #print(df1.loc[1, "Radiacao (KJ/m²)"])
+    #df1.loc[1, "Radiacao (KJ/m²)"] = 0
+    #print(df1.loc[1, "Radiacao (KJ/m²)"])
+    #print("---------------->THISLINEBLANKONPURPOSE")
     
     print("inspecting types!")
 
@@ -243,10 +270,10 @@ def testmain():
         stuff.  
     
     """
-    df1 = pd.read_csv(FILE1, sep=";", thousands=",")
-    df2 = pd.read_csv(FILE2, sep=";", thousands=",")
-    df3 = pd.read_csv(FILE3, sep=";", thousands=",")
-    df4 = pd.read_csv(FILE4, sep=";", thousands=",")
+    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
 
     print(df1.head())
     print(df1.info)
@@ -273,25 +300,66 @@ def main():
     df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
 
     # 2. inspection step!
-    runinspection(df1)
+    if INSPECT == 1:
+        print(df1.info())
+        print(df2.info())
+        print(df3.info())
+        print(df4.info())
 
-    # 3. the processing
+    # 3. process
     nanhandler(df1)
+    nanhandler(df2)
+    nanhandler(df3)
+    nanhandler(df4)
 
-    #
+    # 4. second inspection.
+    if INSPECT == 1:
+        print(df1.info())
+        print(df2.info())
+        print(df3.info())
+        print(df4.info())
+
     # the merging
+    bigdf = pd.DataFrame(pd.concat([df1, df2, df3, df4]))
+    #nanhandler(bigdf)
 
+    # not bad!
+    #values seem to be alright :>
+    print(bigdf.info())
     # the saving
+    #still some nans, but we'll bugger them out much faster with this saved to memory
+    bigdf.to_csv(TARGET, index = False)
+    #nanhandler(bigdf)
 
     # done :>
+    #exit(0)
+
+def mainII():
+    """
+        this one serves to process the big ones.
+        send them here to inspect after saving
+        to disk by changing the TARGET constant global.
+
+        this main uses interpolation to fill invalids. 
+        Very
+        great.
+    """
+    df = pd.read_csv(TARGET, parse_dates=[0], date_format="%Y-%m-%d")
+    df.info()
+    df = df.interpolate()
+    #That's the fucking way we do it :>
+    df.info()
+    df.to_csv(TARGET, index = False)
+    nanhandler(df)
+
     exit(0)
-    
+
  
 
 if __name__ == "__main__":
     #choose one. comment the other. don't run both.
     #testmain()
-    main()
+    mainII()
     
 
 
