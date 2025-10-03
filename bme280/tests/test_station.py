@@ -26,7 +26,7 @@ def test_station():
     print("\nTestando estação...")
     
     try:
-        from bme280_station import BME280Station
+        from server import BME280Station
         station = BME280Station()
         print("✓ Estação criada")
         return True
