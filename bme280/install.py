@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Instalador da Estação Meteorológica BME280
-Script unificado para instalação e configuração completa do sistema.
+Script para instalação e configuração do sistema.
 """
 
 import os
@@ -38,11 +37,6 @@ class BME280Installer:
         """Verifica e instala dependências"""
         print("    Verificando dependências...")
         
-        # Verifica Python
-        if sys.version_info < (3, 7):
-            print("Python 3.7+ é necessário")
-            return False
-        
         # Instala dependências Python
         try:
             subprocess.run([
@@ -71,9 +65,6 @@ try:
     calibration_params = bme280.load_calibration_params(bus, address)
     data = bme280.sample(bus, address, calibration_params)
     print('Sensor BME280 conectado e funcionando!')
-    print(f'Temperatura: {data.temperature:.2f}°C')
-    print(f'Pressão: {data.pressure:.2f} hPa')
-    print(f'Umidade: {data.humidity:.2f}%')
 except Exception as e:
     print(f'Erro: {e}')
     exit(1)
@@ -93,33 +84,6 @@ except Exception as e:
                 
         except Exception as e:
             print(f"Erro ao verificar sensor: {e}")
-            return False
-    
-    def create_directories(self):
-        """Cria diretórios necessários"""
-        print("Criando diretórios...")
-        
-        directories = [
-            self.project_dir / "logs",
-            self.project_dir / "config",
-            self.project_dir / "scripts"
-        ]
-        
-        try:
-            for directory in directories:
-                # usa parents=True por segurança (caso falte algum pai) e exist_ok=True
-                directory.mkdir(parents=True, exist_ok=True)
-                # Configura permissões para que o usuário pi possa escrever
-                os.chmod(directory, 0o755)
-                # Se possível, altera o proprietário para pi
-                try:
-                    shutil.chown(directory, user='pi', group='pi')
-                except:
-                    pass  # Ignora se não conseguir alterar proprietário
-                print(f"   {directory}")
-            return True
-        except Exception as e:
-            print(f"   Erro ao criar diretórios: {e}")
             return False
     
     def create_service_file(self):
@@ -292,7 +256,6 @@ esac
         steps = [
             ("Verificando dependências", self.check_dependencies),
             ("Verificando sensor", self.check_sensor),
-            ("Criando diretórios", self.create_directories),
             ("Criando serviço systemd", self.create_service_file),
             ("Configurando permissões", self.setup_permissions),
             ("Configurando logs", self.create_log_file),

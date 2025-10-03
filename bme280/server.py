@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Estação Meteorológica BME280 - Sistema Simplificado
-Sistema básico de monitoramento meteorológico com controle simples.
+Estação Meteorológica BME280
 """
 
 import os
