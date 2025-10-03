@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Estação Meteorológica</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Estação Meteorológica</h1>
+        </div>
+
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Desconectado</span>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="startSensor()">Iniciar Sensor</button>
+            <button class="btn stop" onclick="stopSensor()">Parar Sensor</button>
+        </div>
+
+        <div class="data-grid">
+            <div class="data-card">
+                <h3>Temperatura</h3>
+                <div class="data-value" id="temperature">--</div>
+                <div>°C</div>
+            </div>
+            <div class="data-card">
+                <h3>Pressão</h3>
+                <div class="data-value" id="pressure">--</div>
+                <div>hPa</div>
+            </div>
+            <div class="data-card">
+                <h3>Umidade</h3>
+                <div class="data-value" id="humidity">--</div>
+                <div>%</div>
+            </div>
+        </div>
+
+        <div class="update-time" id="lastUpdate">
+            Aguardando dados...
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
