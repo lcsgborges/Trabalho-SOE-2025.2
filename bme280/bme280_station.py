@@ -36,7 +36,7 @@ class BME280Station:
         self.config = {
             'sensor_address': 0x76,
             'i2c_bus': 1,
-            'collect_interval': 30,  # segundos
+            'collect_interval': 60,  # segundos
             'server_host': '0.0.0.0',
             'server_port': 5000
         }
