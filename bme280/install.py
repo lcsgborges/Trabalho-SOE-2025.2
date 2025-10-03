@@ -325,3 +325,6 @@ def main():
     else:
         # Instalação
         installer.install()
+
+if __name__ == "__main__":
+    main()
