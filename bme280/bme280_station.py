@@ -93,7 +93,7 @@ class BME280Station:
             print("Usando apenas saída do console")
         
         logging.basicConfig(
-            level=logging.INFO,
+            level=logging.DEBUG,
             format='%(asctime)s - %(levelname)s - %(message)s',
             handlers=handlers
         )
@@ -140,20 +140,46 @@ class BME280Station:
     def init_sensor(self):
         """Inicializa o sensor BME280"""
         try:
+            self.logger.info(f"Tentando conectar ao barramento I2C {self.config['i2c_bus']}")
             self.bus = smbus2.SMBus(self.config['i2c_bus'])
+            
+            self.logger.info(f"Carregando parâmetros de calibração do sensor no endereço {hex(self.config['sensor_address'])}")
             self.calibration_params = bme280.load_calibration_params(
                 self.bus, self.config['sensor_address']
             )
+            
+            # Testa uma leitura para verificar se está funcionando
+            self.logger.info("Fazendo leitura de teste do sensor...")
+            test_data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
+            self.logger.info(f"Leitura de teste OK: T={test_data.temperature:.2f}°C, "
+                           f"P={test_data.pressure:.2f}hPa, U={test_data.humidity:.2f}%")
+            
             self.logger.info("Sensor BME280 inicializado com sucesso")
             return True
         except Exception as e:
             self.logger.error(f"Erro ao inicializar sensor: {e}")
+            self.logger.error(f"Tipo do erro: {type(e).__name__}")
+            # Tenta diferentes endereços se o padrão falhar
+            if self.config['sensor_address'] == 0x76:
+                self.logger.info("Tentando endereço alternativo 0x77...")
+                try:
+                    self.config['sensor_address'] = 0x77
+                    self.calibration_params = bme280.load_calibration_params(
+                        self.bus, self.config['sensor_address']
+                    )
+                    test_data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
+                    self.logger.info(f"Sensor encontrado no endereço 0x77! T={test_data.temperature:.2f}°C")
+                    return True
+                except:
+                    self.logger.error("Endereço 0x77 também falhou")
             return False
     
     def collect_sensor_data(self):
         """Coleta dados do sensor em loop"""
+        self.logger.info("Iniciando loop de coleta de dados do sensor...")
         while self.running:
             try:
+                self.logger.debug("Tentando coletar dados do sensor...")
                 data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
                 self.sensor_data.update({
                     'temperature': round(data.temperature, 2),
@@ -172,17 +198,24 @@ class BME280Station:
                     'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 })
                 self.logger.error(f"Erro na coleta de dados: {e}")
+                self.logger.error(f"Tipo do erro: {type(e).__name__}")
             
+            self.logger.debug(f"Aguardando {self.config['collect_interval']} segundos antes da próxima coleta...")
             time.sleep(self.config['collect_interval'])
+        
+        self.logger.info("Loop de coleta de dados finalizado")
     
     def start_sensor_thread(self):
         """Inicia thread de coleta de dados"""
+        self.logger.info("Tentando inicializar sensor...")
         if not self.init_sensor():
+            self.logger.error("Falha na inicialização do sensor - thread não será iniciada")
             return False
         
+        self.logger.info("Sensor inicializado com sucesso, iniciando thread de coleta...")
         self.sensor_thread = threading.Thread(target=self.collect_sensor_data, daemon=True)
         self.sensor_thread.start()
-        self.logger.info("Thread de coleta de dados iniciada")
+        self.logger.info("Thread de coleta de dados iniciada com sucesso")
         return True
     
     def start_server(self):

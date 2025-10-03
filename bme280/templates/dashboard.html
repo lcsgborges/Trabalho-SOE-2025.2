@@ -207,6 +207,13 @@
         <div class="last-update" id="lastUpdateTime">
             Aguardando dados...
         </div>
+        
+        <!-- Botões de debug -->
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="testAPI()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Testar API</button>
+            <button onclick="fetchData()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Atualizar Agora</button>
+            <button onclick="toggleAutoUpdate()" style="background: #ffc107; color: black; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Pausar/Retomar</button>
+        </div>
     </div>
 
     <script>
@@ -248,16 +255,27 @@
         }
 
         function updateData(data) {
+            // Debug: Log dos dados recebidos
+            console.log('Dados recebidos:', data);
+            
             clearError();
             
             if (data.status === 'error') {
+                console.log('Status: ERROR -', data.error_message);
                 updateStatus('error');
                 showError(data.error_message || 'Erro desconhecido');
                 return;
             }
 
             if (data.status === 'online') {
+                console.log('Status: ONLINE - Atualizando dados...');
                 updateStatus('online');
+                
+                // Debug: Log dos valores individuais
+                console.log('Temperatura:', data.temperature);
+                console.log('Pressão:', data.pressure);
+                console.log('Umidade:', data.humidity);
+                console.log('Timestamp:', data.timestamp);
                 
                 document.getElementById('temperature').textContent = data.temperature || '--';
                 document.getElementById('pressure').textContent = data.pressure || '--';
@@ -265,20 +283,44 @@
                 document.getElementById('lastUpdate').textContent = `Última atualização: ${data.timestamp || '--'}`;
                 document.getElementById('lastUpdateTime').textContent = `Dados atualizados em: ${data.timestamp || '--'}`;
             } else {
+                console.log('Status: OFFLINE ou desconhecido -', data.status);
                 updateStatus('offline');
+                
+                // Mostra dados mesmo que offline, se existirem
+                if (data.temperature !== undefined) {
+                    document.getElementById('temperature').textContent = data.temperature;
+                }
+                if (data.pressure !== undefined) {
+                    document.getElementById('pressure').textContent = data.pressure;
+                }
+                if (data.humidity !== undefined) {
+                    document.getElementById('humidity').textContent = data.humidity;
+                }
+                if (data.timestamp) {
+                    document.getElementById('lastUpdate').textContent = `Última atualização: ${data.timestamp}`;
+                    document.getElementById('lastUpdateTime').textContent = `Dados atualizados em: ${data.timestamp}`;
+                }
             }
         }
 
         function fetchData() {
+            console.log('Buscando dados do servidor...');
             fetch('/api/data')
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Resposta recebida:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('JSON parseado com sucesso');
                     updateData(data);
                 })
                 .catch(error => {
                     console.error('Erro ao buscar dados:', error);
                     updateStatus('error');
-                    showError('Erro de conexão com o servidor');
+                    showError(`Erro de conexão: ${error.message}`);
                 });
         }
 
@@ -293,6 +335,56 @@
         function stopAutoUpdate() {
             if (updateInterval) {
                 clearInterval(updateInterval);
+            }
+        }
+
+        // Função para testar todas as APIs
+        function testAPI() {
+            console.log('=== TESTE DE API ===');
+            
+            // Testa /api/data
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API /api/data:', data);
+                    alert('API /api/data funcionando! Verifique o console para detalhes.');
+                })
+                .catch(error => {
+                    console.error('Erro em /api/data:', error);
+                    alert('Erro em /api/data: ' + error.message);
+                });
+            
+            // Testa /api/status
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API /api/status:', data);
+                })
+                .catch(error => {
+                    console.error('Erro em /api/status:', error);
+                });
+            
+            // Testa /api/info
+            fetch('/api/info')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API /api/info:', data);
+                })
+                .catch(error => {
+                    console.error('Erro em /api/info:', error);
+                });
+        }
+
+        let autoUpdatePaused = false;
+        function toggleAutoUpdate() {
+            if (autoUpdatePaused) {
+                startAutoUpdate();
+                autoUpdatePaused = false;
+                console.log('Auto-update retomado');
+            } else {
+                stopAutoUpdate();
+                autoUpdatePaused = true;
+                console.log('Auto-update pausado');
             }
         }
 
