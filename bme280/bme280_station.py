@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 """
-Estação Meteorológica BME280 - Sistema Unificado
-Sistema completo de monitoramento meteorológico com servidor web e inicialização automática.
+Estação Meteorológica BME280 - Sistema Simplificado
+Sistema básico de monitoramento meteorológico com controle simples.
 """
 
 import os
 import sys
 import time
 import signal
-import logging
 import threading
-import subprocess
 from datetime import datetime
-from pathlib import Path
 
 # Adiciona o diretório atual ao path para imports
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -34,20 +31,14 @@ class BME280Station:
         self.app = Flask(__name__)
         self.running = False
         self.sensor_thread = None
-        self.server_thread = None
         
-        # Diretório base do projeto
-        self.base_dir = Path(__file__).parent.absolute()
-        
-        # Configurações
+        # Configurações básicas
         self.config = {
             'sensor_address': 0x76,
             'i2c_bus': 1,
-            'collect_interval': 60,  # segundos
+            'collect_interval': 30,  # segundos
             'server_host': '0.0.0.0',
-            'server_port': 5000,
-            'log_file': str(self.base_dir / 'logs' / 'bme280.log'),
-            'pid_file': '/var/run/bme280-station.pid'
+            'server_port': 5000
         }
         
         # Dados do sensor
@@ -59,48 +50,15 @@ class BME280Station:
             'status': 'offline'
         }
         
-        # Configurar logging
-        self.setup_logging()
-        
         # Configurar rotas do Flask
         self.setup_routes()
         
-        # Configurar sinais para shutdown graceful
+        # Configurar sinais para shutdown
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
     
-    def setup_logging(self):
-        """Configura o sistema de logging"""
-        # Criar diretório de logs se não existir
-        log_dir = self.base_dir / 'logs'
-        log_dir.mkdir(exist_ok=True)
-        
-        # Configurar permissões do diretório de logs
-        try:
-            os.chmod(log_dir, 0o755)
-        except:
-            pass  # Ignora erro de permissão se não for possível alterar
-        
-        # Configurar handlers de logging
-        handlers = [logging.StreamHandler()]
-        
-        # Tenta criar handler de arquivo, se falhar usa apenas console
-        try:
-            file_handler = logging.FileHandler(self.config['log_file'])
-            handlers.append(file_handler)
-        except PermissionError:
-            print(f"Aviso: Não foi possível criar log em {self.config['log_file']}")
-            print("Usando apenas saída do console")
-        
-        logging.basicConfig(
-            level=logging.DEBUG,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=handlers
-        )
-        self.logger = logging.getLogger(__name__)
-    
     def setup_routes(self):
-        """Configura as rotas do Flask"""
+        """Configura as rotas básicas do Flask"""
         
         @self.app.route('/')
         def index():
@@ -118,291 +76,133 @@ class BME280Station:
                 'server_running': self.running
             })
         
-        @self.app.route('/api/info')
-        def get_info():
-            return jsonify({
-                'station_name': 'Estação Meteorológica BME280',
-                'version': '1.0.0',
-                'sensor_interval': self.config['collect_interval'],
-                'server_url': f"http://{self.get_local_ip()}:{self.config['server_port']}"
-            })
+        @self.app.route('/api/start')
+        def start_sensor():
+            """Inicia a coleta de dados do sensor"""
+            if not self.running:
+                success = self.start_sensor_collection()
+                return jsonify({'success': success, 'message': 'Sensor iniciado' if success else 'Erro ao iniciar sensor'})
+            return jsonify({'success': False, 'message': 'Sensor já está rodando'})
         
-        @self.app.route('/api/debug')
-        def get_debug():
-            """Rota de debug para verificar estado das threads"""
-            return jsonify({
-                'running': self.running,
-                'sensor_thread_alive': self.sensor_thread.is_alive() if self.sensor_thread else False,
-                'sensor_data': self.sensor_data,
-                'has_bus': hasattr(self, 'bus'),
-                'has_calibration': hasattr(self, 'calibration_params'),
-                'config': self.config
-            })
-        
-        @self.app.route('/api/force_read')
-        def force_read():
-            """Força uma leitura manual do sensor para debug"""
-            try:
-                if not hasattr(self, 'bus'):
-                    return jsonify({'error': 'Sensor não inicializado - sem bus I2C'})
-                
-                if not hasattr(self, 'calibration_params'):
-                    return jsonify({'error': 'Sensor não inicializado - sem parâmetros de calibração'})
-                
-                data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
-                
-                result = {
-                    'success': True,
-                    'temperature': round(data.temperature, 2),
-                    'pressure': round(data.pressure, 2),
-                    'humidity': round(data.humidity, 2),
-                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                    'sensor_address': hex(self.config['sensor_address'])
-                }
-                
-                # Atualiza os dados globais também (para teste)
-                self.sensor_data.update({
-                    'temperature': result['temperature'],
-                    'pressure': result['pressure'],
-                    'humidity': result['humidity'],
-                    'timestamp': result['timestamp'],
-                    'status': 'online'
-                })
-                
-                return jsonify(result)
-                
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': str(e),
-                    'error_type': type(e).__name__
-                })
-    
-    def get_local_ip(self):
-        """Obtém o IP local da máquina"""
-        try:
-            import socket
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-                s.connect(("8.8.8.8", 80))
-                return s.getsockname()[0]
-        except:
-            return "localhost"
+        @self.app.route('/api/stop')
+        def stop_sensor():
+            """Para a coleta de dados do sensor"""
+            if self.running:
+                self.stop_sensor_collection()
+                return jsonify({'success': True, 'message': 'Sensor parado'})
+            return jsonify({'success': False, 'message': 'Sensor não está rodando'})
     
     def init_sensor(self):
         """Inicializa o sensor BME280"""
         try:
-            self.logger.info(f"Tentando conectar ao barramento I2C {self.config['i2c_bus']}")
+            print(f"Conectando ao barramento I2C {self.config['i2c_bus']}")
             self.bus = smbus2.SMBus(self.config['i2c_bus'])
             
-            self.logger.info(f"Carregando parâmetros de calibração do sensor no endereço {hex(self.config['sensor_address'])}")
+            print(f"Carregando parâmetros do sensor no endereço {hex(self.config['sensor_address'])}")
             self.calibration_params = bme280.load_calibration_params(
                 self.bus, self.config['sensor_address']
             )
             
-            # Testa uma leitura para verificar se está funcionando
-            self.logger.info("Fazendo leitura de teste do sensor...")
+            # Testa uma leitura
             test_data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
-            self.logger.info(f"Leitura de teste OK: T={test_data.temperature:.2f}°C, "
-                           f"P={test_data.pressure:.2f}hPa, U={test_data.humidity:.2f}%")
-            
-            self.logger.info("Sensor BME280 inicializado com sucesso")
+            print(f"Sensor OK: T={test_data.temperature:.1f}°C, P={test_data.pressure:.1f}hPa, U={test_data.humidity:.1f}%")
             return True
         except Exception as e:
-            self.logger.error(f"Erro ao inicializar sensor: {e}")
-            self.logger.error(f"Tipo do erro: {type(e).__name__}")
-            # Tenta diferentes endereços se o padrão falhar
+            print(f"Erro no endereço 0x76: {e}")
+            # Tenta endereço alternativo
             if self.config['sensor_address'] == 0x76:
-                self.logger.info("Tentando endereço alternativo 0x77...")
+                print("Tentando endereço 0x77...")
                 try:
                     self.config['sensor_address'] = 0x77
                     self.calibration_params = bme280.load_calibration_params(
                         self.bus, self.config['sensor_address']
                     )
                     test_data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
-                    self.logger.info(f"Sensor encontrado no endereço 0x77! T={test_data.temperature:.2f}°C")
+                    print(f"Sensor encontrado em 0x77! T={test_data.temperature:.1f}°C")
                     return True
-                except:
-                    self.logger.error("Endereço 0x77 também falhou")
+                except Exception as e2:
+                    print(f"Erro no endereço 0x77: {e2}")
             return False
     
     def collect_sensor_data(self):
         """Coleta dados do sensor em loop"""
-        self.logger.info("Iniciando loop de coleta de dados do sensor...")
+        print("Iniciando coleta de dados...")
         while self.running:
             try:
-                self.logger.debug("Tentando coletar dados do sensor...")
                 data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
                 self.sensor_data.update({
-                    'temperature': round(data.temperature, 2),
-                    'pressure': round(data.pressure, 2),
-                    'humidity': round(data.humidity, 2),
+                    'temperature': round(data.temperature, 1),
+                    'pressure': round(data.pressure, 1),
+                    'humidity': round(data.humidity, 1),
                     'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                     'status': 'online'
                 })
-                self.logger.info(f"Dados coletados: T={self.sensor_data['temperature']}°C, "
-                               f"P={self.sensor_data['pressure']}hPa, "
-                               f"U={self.sensor_data['humidity']}%")
+                print(f"Dados: T={self.sensor_data['temperature']}°C P={self.sensor_data['pressure']}hPa U={self.sensor_data['humidity']}%")
             except Exception as e:
                 self.sensor_data.update({
                     'status': 'error',
                     'error_message': str(e),
                     'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 })
-                self.logger.error(f"Erro na coleta de dados: {e}")
-                self.logger.error(f"Tipo do erro: {type(e).__name__}")
+                print(f"Erro na coleta: {e}")
             
-            self.logger.debug(f"Aguardando {self.config['collect_interval']} segundos antes da próxima coleta...")
             time.sleep(self.config['collect_interval'])
         
-        self.logger.info("Loop de coleta de dados finalizado")
+        print("Coleta de dados finalizada")
     
-    def start_sensor_thread(self):
-        """Inicia thread de coleta de dados"""
-        self.logger.info("Tentando inicializar sensor...")
+    def start_sensor_collection(self):
+        """Inicia coleta de dados do sensor"""
         if not self.init_sensor():
-            self.logger.error("Falha na inicialização do sensor - thread não será iniciada")
+            print("Falha na inicialização do sensor")
             return False
         
-        self.logger.info("Sensor inicializado com sucesso, iniciando thread de coleta...")
+        self.running = True
         self.sensor_thread = threading.Thread(target=self.collect_sensor_data, daemon=True)
         self.sensor_thread.start()
-        self.logger.info("Thread de coleta de dados iniciada com sucesso")
+        print("Coleta de dados iniciada")
         return True
     
-    def start_server(self):
-        """Inicia o servidor Flask"""
-        try:
-            self.app.run(
-                host=self.config['server_host'],
-                port=self.config['server_port'],
-                debug=False,
-                use_reloader=False,
-                threaded=True
-            )
-        except Exception as e:
-            self.logger.error(f"Erro ao iniciar servidor: {e}")
-    
-    def start_server_thread(self):
-        """Inicia servidor em thread separada"""
-        self.server_thread = threading.Thread(target=self.start_server, daemon=True)
-        self.server_thread.start()
-        self.logger.info("Servidor Flask iniciado")
-    
-    def display_startup_info(self):
-        """Exibe informações de inicialização"""
-        local_ip = self.get_local_ip()
-        
-        print("\n" + "="*60)
-        print("           ESTAÇÃO METEOROLÓGICA BME280")
-        print("="*60)
-        print(f"IP da Raspberry Pi: {local_ip}")
-        print(f"Servidor: http://{local_ip}:{self.config['server_port']}")
-        print(f"API de dados: http://{local_ip}:{self.config['server_port']}/api/data")
-        print(f"Status: http://{local_ip}:{self.config['server_port']}/api/status")
-        print(f"Coleta de dados: A cada {self.config['collect_interval']} segundos")
-        print("="*60)
-        print("Pressione Ctrl+C para parar")
-        print("="*60 + "\n")
+    def stop_sensor_collection(self):
+        """Para a coleta de dados do sensor"""
+        self.running = False
+        self.sensor_data['status'] = 'offline'
+        print("Coleta de dados parada")
     
     def signal_handler(self, signum, frame):
         """Manipula sinais de parada"""
-        self.logger.info(f"Recebido sinal {signum}, parando estação...")
+        print(f"Recebido sinal para parar...")
         self.stop()
     
     def stop(self):
         """Para a estação meteorológica"""
         self.running = False
-        self.logger.info("Estação meteorológica parada")
+        print("Estação parada")
     
     def run(self):
-        """Executa a estação meteorológica"""
-        self.logger.info("Iniciando Estação Meteorológica BME280...")
-        
-        # Marca como rodando ANTES de iniciar threads
-        self.running = True
-        
-        # Inicia coleta de dados
-        if not self.start_sensor_thread():
-            self.logger.error("Falha ao inicializar sensor, parando...")
-            self.running = False
-            return False
-        
-        # Inicia servidor web
-        self.start_server_thread()
-        
-        # Aguarda um pouco para o servidor inicializar
-        time.sleep(2)
-        
-        # Exibe informações
-        self.display_startup_info()
-        
-        # Salva PID se estiver rodando como serviço
-        if os.geteuid() == 0:  # Se rodando como root
-            try:
-                with open(self.config['pid_file'], 'w') as f:
-                    f.write(str(os.getpid()))
-            except:
-                pass
+        """Executa apenas o servidor web"""
+        print("="*50)
+        print("   ESTAÇÃO METEOROLÓGICA BME280 - BÁSICA")
+        print("="*50)
+        print(f"Servidor: http://localhost:{self.config['server_port']}")
+        print("Use os botões na interface para controlar o sensor")
+        print("Pressione Ctrl+C para parar")
+        print("="*50)
         
         try:
-            # Loop principal
-            while self.running:
-                time.sleep(1)
+            self.app.run(
+                host=self.config['server_host'],
+                port=self.config['server_port'],
+                debug=False
+            )
         except KeyboardInterrupt:
-            self.logger.info("Interrompido pelo usuário")
+            print("\nParando servidor...")
         finally:
-            self.cleanup()
-        
-        return True
-    
-    def cleanup(self):
-        """Limpeza ao parar"""
-        self.running = False
-        
-        # Remove arquivo PID
-        try:
-            if os.path.exists(self.config['pid_file']):
-                os.remove(self.config['pid_file'])
-        except:
-            pass
-        
-        self.logger.info("Limpeza concluída")
+            self.stop()
 
 def main():
     """Função principal"""
     station = BME280Station()
-    
-    # Verifica argumentos da linha de comando
-    if len(sys.argv) > 1:
-        command = sys.argv[1].lower()
-        
-        if command == 'start':
-            station.run()
-        elif command == 'stop':
-            # Para o serviço se estiver rodando
-            try:
-                with open(station.config['pid_file'], 'r') as f:
-                    pid = int(f.read().strip())
-                os.kill(pid, signal.SIGTERM)
-                print("Estação parada")
-            except:
-                print("Estação não estava rodando")
-        elif command == 'status':
-            try:
-                with open(station.config['pid_file'], 'r') as f:
-                    pid = int(f.read().strip())
-                os.kill(pid, 0)  # Verifica se processo existe
-                print("Estação rodando")
-            except:
-                print("Estação não está rodando")
-        elif command == 'info':
-            print(f"IP: {station.get_local_ip()}")
-            print(f"URL: http://{station.get_local_ip()}:{station.config['server_port']}")
-        else:
-            print("Uso: python3 bme280_station.py [start|stop|status|info]")
-    else:
-        # Executa normalmente
-        station.run()
+    station.run()
 
 if __name__ == '__main__':
     main()

@@ -112,6 +112,10 @@ bme280/
 │   └── station_config.py      # Configurações centralizadas
 ├── templates/
 │   └── dashboard.html         # Interface web
+├── tests/                     # Arquivos de teste e diagnóstico
+│   ├── diagnose_sensor.py     # Diagnóstico do sensor
+│   ├── test_station.py        # Testes do sistema
+│   └── README.md              # Documentação dos testes
 ├── scripts/                   # Scripts auxiliares (vazios)
 └── logs/                      # Logs do sistema
 ```
