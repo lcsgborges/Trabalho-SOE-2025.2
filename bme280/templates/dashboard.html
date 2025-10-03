@@ -213,6 +213,9 @@
             <button onclick="testAPI()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Testar API</button>
             <button onclick="fetchData()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Atualizar Agora</button>
             <button onclick="toggleAutoUpdate()" style="background: #ffc107; color: black; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Pausar/Retomar</button>
+            <br>
+            <button onclick="debugStatus()" style="background: #6f42c1; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Debug Status</button>
+            <button onclick="forceRead()" style="background: #dc3545; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer;">Forçar Leitura</button>
         </div>
     </div>
 
@@ -386,6 +389,60 @@
                 autoUpdatePaused = true;
                 console.log('Auto-update pausado');
             }
+        }
+
+        // Função para verificar status de debug
+        function debugStatus() {
+            console.log('=== DEBUG STATUS ===');
+            fetch('/api/debug')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Debug Status:', data);
+                    alert(`Debug Info:
+Running: ${data.running}
+Thread Alive: ${data.sensor_thread_alive}
+Has Bus: ${data.has_bus}
+Has Calibration: ${data.has_calibration}
+Current Data: T=${data.sensor_data.temperature}, P=${data.sensor_data.pressure}, U=${data.sensor_data.humidity}
+Status: ${data.sensor_data.status}
+
+Verifique o console para detalhes completos.`);
+                })
+                .catch(error => {
+                    console.error('Erro em debug:', error);
+                    alert('Erro ao obter debug: ' + error.message);
+                });
+        }
+
+        // Função para forçar leitura do sensor
+        function forceRead() {
+            console.log('=== FORÇAR LEITURA ===');
+            fetch('/api/force_read')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Force Read Result:', data);
+                    if (data.success) {
+                        alert(`Leitura forçada SUCESSO!
+Temperatura: ${data.temperature}°C
+Pressão: ${data.pressure} hPa
+Umidade: ${data.humidity}%
+Endereço: ${data.sensor_address}
+
+Os dados foram atualizados no servidor.`);
+                        // Atualiza o dashboard imediatamente
+                        fetchData();
+                    } else {
+                        alert(`Leitura forçada FALHOU:
+Erro: ${data.error}
+Tipo: ${data.error_type}
+
+Verifique o console para mais detalhes.`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao forçar leitura:', error);
+                    alert('Erro na leitura forçada: ' + error.message);
+                });
         }
 
         // Inicia a atualização automática quando a página carrega

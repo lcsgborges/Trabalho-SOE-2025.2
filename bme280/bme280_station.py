@@ -126,6 +126,57 @@ class BME280Station:
                 'sensor_interval': self.config['collect_interval'],
                 'server_url': f"http://{self.get_local_ip()}:{self.config['server_port']}"
             })
+        
+        @self.app.route('/api/debug')
+        def get_debug():
+            """Rota de debug para verificar estado das threads"""
+            return jsonify({
+                'running': self.running,
+                'sensor_thread_alive': self.sensor_thread.is_alive() if self.sensor_thread else False,
+                'sensor_data': self.sensor_data,
+                'has_bus': hasattr(self, 'bus'),
+                'has_calibration': hasattr(self, 'calibration_params'),
+                'config': self.config
+            })
+        
+        @self.app.route('/api/force_read')
+        def force_read():
+            """Força uma leitura manual do sensor para debug"""
+            try:
+                if not hasattr(self, 'bus'):
+                    return jsonify({'error': 'Sensor não inicializado - sem bus I2C'})
+                
+                if not hasattr(self, 'calibration_params'):
+                    return jsonify({'error': 'Sensor não inicializado - sem parâmetros de calibração'})
+                
+                data = bme280.sample(self.bus, self.config['sensor_address'], self.calibration_params)
+                
+                result = {
+                    'success': True,
+                    'temperature': round(data.temperature, 2),
+                    'pressure': round(data.pressure, 2),
+                    'humidity': round(data.humidity, 2),
+                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'sensor_address': hex(self.config['sensor_address'])
+                }
+                
+                # Atualiza os dados globais também (para teste)
+                self.sensor_data.update({
+                    'temperature': result['temperature'],
+                    'pressure': result['pressure'],
+                    'humidity': result['humidity'],
+                    'timestamp': result['timestamp'],
+                    'status': 'online'
+                })
+                
+                return jsonify(result)
+                
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'error_type': type(e).__name__
+                })
     
     def get_local_ip(self):
         """Obtém o IP local da máquina"""
@@ -267,9 +318,13 @@ class BME280Station:
         """Executa a estação meteorológica"""
         self.logger.info("Iniciando Estação Meteorológica BME280...")
         
+        # Marca como rodando ANTES de iniciar threads
+        self.running = True
+        
         # Inicia coleta de dados
         if not self.start_sensor_thread():
             self.logger.error("Falha ao inicializar sensor, parando...")
+            self.running = False
             return False
         
         # Inicia servidor web
@@ -280,9 +335,6 @@ class BME280Station:
         
         # Exibe informações
         self.display_startup_info()
-        
-        # Marca como rodando
-        self.running = True
         
         # Salva PID se estiver rodando como serviço
         if os.geteuid() == 0:  # Se rodando como root
