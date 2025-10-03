@@ -109,6 +109,13 @@ except Exception as e:
             for directory in directories:
                 # usa parents=True por segurança (caso falte algum pai) e exist_ok=True
                 directory.mkdir(parents=True, exist_ok=True)
+                # Configura permissões para que o usuário pi possa escrever
+                os.chmod(directory, 0o755)
+                # Se possível, altera o proprietário para pi
+                try:
+                    shutil.chown(directory, user='pi', group='pi')
+                except:
+                    pass  # Ignora se não conseguir alterar proprietário
                 print(f"   {directory}")
             return True
         except Exception as e:

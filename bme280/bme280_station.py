@@ -36,6 +36,9 @@ class BME280Station:
         self.sensor_thread = None
         self.server_thread = None
         
+        # Diretório base do projeto
+        self.base_dir = Path(__file__).parent.absolute()
+        
         # Configurações
         self.config = {
             'sensor_address': 0x76,
@@ -43,7 +46,7 @@ class BME280Station:
             'collect_interval': 60,  # segundos
             'server_host': '0.0.0.0',
             'server_port': 5000,
-            'log_file': 'logs/bme280.log',
+            'log_file': str(self.base_dir / 'logs' / 'bme280.log'),
             'pid_file': '/var/run/bme280-station.pid'
         }
         
@@ -69,15 +72,30 @@ class BME280Station:
     def setup_logging(self):
         """Configura o sistema de logging"""
         # Criar diretório de logs se não existir
-        Path('logs').mkdir(exist_ok=True)
+        log_dir = self.base_dir / 'logs'
+        log_dir.mkdir(exist_ok=True)
+        
+        # Configurar permissões do diretório de logs
+        try:
+            os.chmod(log_dir, 0o755)
+        except:
+            pass  # Ignora erro de permissão se não for possível alterar
+        
+        # Configurar handlers de logging
+        handlers = [logging.StreamHandler()]
+        
+        # Tenta criar handler de arquivo, se falhar usa apenas console
+        try:
+            file_handler = logging.FileHandler(self.config['log_file'])
+            handlers.append(file_handler)
+        except PermissionError:
+            print(f"Aviso: Não foi possível criar log em {self.config['log_file']}")
+            print("Usando apenas saída do console")
         
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(self.config['log_file']),
-                logging.StreamHandler()
-            ]
+            handlers=handlers
         )
         self.logger = logging.getLogger(__name__)
     
