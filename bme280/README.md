@@ -36,7 +36,7 @@ curl http://localhost:5000/api/status    # Status
 
 ``` bash
 bme280/
-├── bme280_station.py    # Script principal
+├── server.py            # Script principal
 ├── install.py           # Instalador
 ├── station_control.sh   # Controle
 ├── requirements.txt     # Dependências
