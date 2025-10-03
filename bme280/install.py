@@ -46,7 +46,7 @@ class BME280Installer:
         # Instala dependências Python
         try:
             subprocess.run([
-                sys.executable, "-m", "pip", "install", "-r", "requirements.txt"
+                sys.executable, "-m", "pip", "install", "--break-system-packages", "-r", "requirements.txt"
             ], check=True, cwd=self.project_dir)
             print("Dependências Python instaladas")
         except subprocess.CalledProcessError:
@@ -105,9 +105,15 @@ except Exception as e:
             self.project_dir / "scripts"
         ]
         
-        for directory in directories:
-            directory.mkdir(exist_ok=True)
-            print(f"   {directory}")
+        try:
+            for directory in directories:
+                # usa parents=True por segurança (caso falte algum pai) e exist_ok=True
+                directory.mkdir(parents=True, exist_ok=True)
+                print(f"   {directory}")
+            return True
+        except Exception as e:
+            print(f"   Erro ao criar diretórios: {e}")
+            return False
     
     def create_service_file(self):
         """Cria arquivo de serviço systemd"""
