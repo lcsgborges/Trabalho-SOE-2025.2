@@ -155,29 +155,17 @@
 
         function updateData(data) {
             updateStatus(data.status);
-            
-            if (data.temperature !== undefined) {
-                document.getElementById('temperature').textContent = data.temperature;
-            }
-            if (data.pressure !== undefined) {
-                document.getElementById('pressure').textContent = data.pressure;
-            }
-            if (data.humidity !== undefined) {
-                document.getElementById('humidity').textContent = data.humidity;
-            }
-            if (data.timestamp) {
-                document.getElementById('lastUpdate').textContent = `Última atualização: ${data.timestamp}`;
-            }
+            document.getElementById('temperature').textContent = data.temperature || '--';
+            document.getElementById('pressure').textContent = data.pressure || '--';
+            document.getElementById('humidity').textContent = data.humidity || '--';
+            document.getElementById('lastUpdate').textContent = `Última atualização: ${data.timestamp || '--'}`;
         }
 
         function fetchData() {
             fetch('/api/data')
                 .then(response => response.json())
                 .then(data => updateData(data))
-                .catch(error => {
-                    console.error('Erro:', error);
-                    updateStatus('error');
-                });
+                .catch(error => updateStatus('error'));
         }
 
         function startSensor() {
@@ -207,7 +195,7 @@
 
         function startAutoUpdate() {
             fetchData();
-            updateInterval = setInterval(fetchData, 5000);
+            updateInterval = setInterval(fetchData, 10000);
         }
 
         function stopAutoUpdate() {
@@ -216,8 +204,8 @@
             }
         }
 
-        // Atualiza status inicial
-        fetchData();
+        // Inicia automaticamente quando a página carrega
+        document.addEventListener('DOMContentLoaded', startAutoUpdate);
     </script>
 </body>
 </html>
