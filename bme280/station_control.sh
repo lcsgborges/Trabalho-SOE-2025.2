@@ -18,7 +18,7 @@ case "$1" in
         sudo journalctl -u bme280-station -f
         ;;
     info)
-        python3 /home/pi/trabalho/bme280/bme280_station.py info
+        python3 /home/pi/trabalho/bme280/server.py info
         ;;
     *)
         echo "Uso: $0 {start|stop|restart|status|logs|info}"

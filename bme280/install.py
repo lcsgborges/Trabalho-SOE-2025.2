@@ -1,331 +1,147 @@
 #!/usr/bin/env python3
 """
-Instalador da Estação Meteorológica BME280
-Script unificado para instalação e configuração completa do sistema.
+Instalador BME280 - Versão Simplificada
 """
 
 import os
 import sys
 import subprocess
-import shutil
 from pathlib import Path
 
-class BME280Installer:
-    """Instalador da estação meteorológica BME280"""
+def check_root():
+    """Verifica se está rodando como root"""
+    if os.geteuid() != 0:
+        print("Execute como root: sudo python3 install.py")
+        return False
+    return True
     
-    def __init__(self):
-        self.project_dir = Path(__file__).parent.absolute()
-        self.service_file = "/etc/systemd/system/bme280-station.service"
-        self.log_file = "/var/log/bme280-station.log"
-        self.pid_file = "/var/run/bme280-station.pid"
-        
-    def print_header(self):
-        """Exibe cabeçalho do instalador"""
-        print("\n" + "="*60)
-        print("    INSTALADOR ESTAÇÃO METEOROLÓGICA BME280")
-        print("="*60)
-        print()
-    
-    def check_root(self):
-        """Verifica se está rodando como root"""
-        if os.geteuid() != 0:
-            print("   Este script deve ser executado como root (use sudo)")
-            print("   sudo python3 install.py")
-            return False
+def install_dependencies():
+    """Instala dependências"""
+    print("Instalando dependências...")
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "--break-system-packages", "-r", "requirements.txt"], check=True)
+        print("✓ Dependências instaladas")
         return True
+    except:
+        print("✗ Erro ao instalar dependências")
+        return False
+
+def create_service():
+    """Cria serviço systemd"""
+    print("Criando serviço...")
     
-    def check_dependencies(self):
-        """Verifica e instala dependências"""
-        print("    Verificando dependências...")
-        
-        # Verifica Python
-        if sys.version_info < (3, 7):
-            print("Python 3.7+ é necessário")
-            return False
-        
-        # Instala dependências Python
-        try:
-            subprocess.run([
-                sys.executable, "-m", "pip", "install", "--break-system-packages", "-r", "requirements.txt"
-            ], check=True, cwd=self.project_dir)
-            print("Dependências Python instaladas")
-        except subprocess.CalledProcessError:
-            print("Erro ao instalar dependências Python")
-            return False
-        
-        return True
-    
-    def check_sensor(self):
-        """Verifica se o sensor está conectado"""
-        print("Verificando sensor BME280...")
-        
-        try:
-            # Testa importação e conexão com sensor
-            result = subprocess.run([
-                sys.executable, "-c", """
-import smbus2
-import bme280
-try:
-    bus = smbus2.SMBus(1)
-    address = 0x76
-    calibration_params = bme280.load_calibration_params(bus, address)
-    data = bme280.sample(bus, address, calibration_params)
-    print('Sensor BME280 conectado e funcionando!')
-    print(f'Temperatura: {data.temperature:.2f}°C')
-    print(f'Pressão: {data.pressure:.2f} hPa')
-    print(f'Umidade: {data.humidity:.2f}%')
-except Exception as e:
-    print(f'Erro: {e}')
-    exit(1)
-"""
-            ], capture_output=True, text=True, cwd=self.project_dir)
-            
-            if result.returncode == 0:
-                print("Sensor BME280 funcionando")
-                print(result.stdout.strip())
-                return True
-            else:
-                print("Sensor BME280 não está funcionando")
-                print("   Verifique se o sensor está conectado e I2C está habilitado")
-                print("   Execute: sudo raspi-config")
-                print("   Interface Options > I2C > Enable")
-                return False
-                
-        except Exception as e:
-            print(f"Erro ao verificar sensor: {e}")
-            return False
-    
-    def create_directories(self):
-        """Cria diretórios necessários"""
-        print("Criando diretórios...")
-        
-        directories = [
-            self.project_dir / "logs",
-            self.project_dir / "config",
-            self.project_dir / "scripts"
-        ]
-        
-        try:
-            for directory in directories:
-                # usa parents=True por segurança (caso falte algum pai) e exist_ok=True
-                directory.mkdir(parents=True, exist_ok=True)
-                # Configura permissões para que o usuário pi possa escrever
-                os.chmod(directory, 0o755)
-                # Se possível, altera o proprietário para pi
-                try:
-                    shutil.chown(directory, user='pi', group='pi')
-                except:
-                    pass  # Ignora se não conseguir alterar proprietário
-                print(f"   {directory}")
-            return True
-        except Exception as e:
-            print(f"   Erro ao criar diretórios: {e}")
-            return False
-    
-    def create_service_file(self):
-        """Cria arquivo de serviço systemd"""
-        print("Criando serviço systemd...")
-        
-        service_content = f"""[Unit]
-Description=Estacao Meteorologica BME280
-Documentation=https://github.com/raspberrypi
+    project_dir = Path(__file__).parent.absolute()
+    service_content = f"""[Unit]
+Description=BME280 Server
 After=network.target
-Wants=network.target
 
 [Service]
 Type=simple
 User=pi
-Group=pi
-WorkingDirectory={self.project_dir}
-ExecStart={sys.executable} {self.project_dir}/bme280_station.py start
-ExecStop={sys.executable} {self.project_dir}/bme280_station.py stop
-PIDFile={self.pid_file}
+WorkingDirectory={project_dir}
+ExecStart={sys.executable} {project_dir}/server.py
 Restart=always
 RestartSec=10
-StandardOutput=journal+console
-StandardError=journal+console
-
-# Configurações de segurança
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/var/log /var/run {self.project_dir}
-
-# Permissões para acesso ao hardware I2C
-SupplementaryGroups=i2c
 
 [Install]
 WantedBy=multi-user.target
 """
-        
-        try:
-            with open(self.service_file, 'w') as f:
-                f.write(service_content)
-            print(f"   {self.service_file}")
-            return True
-        except Exception as e:
-            print(f"   Erro ao criar serviço: {e}")
-            return False
     
-    def setup_permissions(self):
-        """Configura permissões"""
-        print("Configurando permissões...")
-        
-        try:
-            # Adiciona usuário pi ao grupo i2c
-            subprocess.run(["usermod", "-a", "-G", "i2c", "pi"], check=True)
-            print("   Usuário pi adicionado ao grupo i2c")
-            
-            # Permissões nos arquivos
-            os.chmod(self.project_dir / "bme280_station.py", 0o755)
-            print("   Permissões do script principal configuradas")
-            
-            return True
-        except Exception as e:
-            print(f"   Erro ao configurar permissões: {e}")
-            return False
-    
-    def create_log_file(self):
-        """Cria arquivo de log"""
-        print("Configurando logs...")
-        
-        try:
-            # Cria arquivo de log
-            Path(self.log_file).touch()
-            os.chown(self.log_file, 1000, 1000)  # pi:pi
-            print(f"   {self.log_file}")
-            return True
-        except Exception as e:
-            print(f"   Erro ao criar log: {e}")
-            return False
-    
-    def enable_service(self):
-        """Habilita e inicia o serviço"""
-        print("Configurando serviço...")
-        
-        try:
-            # Recarrega systemd
-            subprocess.run(["systemctl", "daemon-reload"], check=True)
-            print("   systemd recarregado")
-            
-            # Habilita serviço
-            subprocess.run(["systemctl", "enable", "bme280-station.service"], check=True)
-            print("   Serviço habilitado para inicialização automática")
-            
-            # Inicia serviço
-            subprocess.run(["systemctl", "start", "bme280-station.service"], check=True)
-            print("   Serviço iniciado")
-            
-            return True
-        except subprocess.CalledProcessError as e:
-            print(f"   Erro ao configurar serviço: {e}")
-            return False
-    
-    def create_control_scripts(self):
-        """Cria scripts de controle"""
-        print("Criando scripts de controle...")
-        
-        # Script de controle principal
-        control_script = f"""#!/bin/bash
-# Script de controle da Estação Meteorológica BME280
+    try:
+        with open("/etc/systemd/system/bme280-station.service", 'w') as f:
+            f.write(service_content)
+        print("✓ Serviço criado")
+        return True
+    except:
+        print("✗ Erro ao criar serviço")
+        return False
 
+def setup_permissions():
+    """Configura permissões"""
+    print("Configurando permissões...")
+    try:
+        subprocess.run(["usermod", "-a", "-G", "i2c", "pi"], check=True)
+        os.chmod("server.py", 0o755)
+        print("✓ Permissões configuradas")
+        return True
+    except:
+        print("✗ Erro nas permissões")
+        return False
+
+def enable_service():
+    """Habilita serviço"""
+    print("Habilitando serviço...")
+    try:
+        subprocess.run(["systemctl", "daemon-reload"], check=True)
+        subprocess.run(["systemctl", "enable", "bme280-station.service"], check=True)
+        subprocess.run(["systemctl", "start", "bme280-station.service"], check=True)
+        print("✓ Serviço habilitado e iniciado")
+        return True
+    except:
+        print("✗ Erro ao habilitar serviço")
+        return False
+
+def create_control_script():
+    """Cria script de controle"""
+    print("Criando script de controle...")
+    
+    script_content = """#!/bin/bash
 case "$1" in
-    start)
-        sudo systemctl start bme280-station
-        ;;
-    stop)
-        sudo systemctl stop bme280-station
-        ;;
-    restart)
-        sudo systemctl restart bme280-station
-        ;;
-    status)
-        sudo systemctl status bme280-station
-        ;;
-    logs)
-        sudo journalctl -u bme280-station -f
-        ;;
-    info)
-        python3 {self.project_dir}/bme280_station.py info
-        ;;
-    *)
-        echo "Uso: $0 {{start|stop|restart|status|logs|info}}"
-        exit 1
-        ;;
+    start)   sudo systemctl start bme280-station ;;
+    stop)    sudo systemctl stop bme280-station ;;
+    restart) sudo systemctl restart bme280-station ;;
+    status)  sudo systemctl status bme280-station ;;
+    logs)    sudo journalctl -u bme280-station -f ;;
+    *)       echo "Uso: $0 {start|stop|restart|status|logs}" ;;
 esac
 """
-        
-        try:
-            with open(self.project_dir / "station_control.sh", 'w') as f:
-                f.write(control_script)
-            os.chmod(self.project_dir / "station_control.sh", 0o755)
-            print("   station_control.sh")
-            
-            return True
-        except Exception as e:
-            print(f"   Erro ao criar scripts: {e}")
-            return False
     
-    def display_success_info(self):
-        """Exibe informações de sucesso"""
-        print("\n" + "="*60)
-        print("    INSTALAÇÃO CONCLUÍDA COM SUCESSO!")
-        print("="*60)
-        print()
-        print("Comandos úteis:")
-        print("   ./station_control.sh start    # Iniciar")
-        print("   ./station_control.sh stop     # Parar")
-        print("   ./station_control.sh status   # Status")
-        print("   ./station_control.sh logs     # Ver logs")
-        print("   ./station_control.sh info     # Ver IP")
-        print()
-        print("O serviço será iniciado automaticamente no boot!")
-        print("="*60)
-        print()
-    
-    def install(self):
-        """Executa instalação completa"""
-        self.print_header()
-        
-        if not self.check_root():
-            return False
-        
-        steps = [
-            ("Verificando dependências", self.check_dependencies),
-            ("Verificando sensor", self.check_sensor),
-            ("Criando diretórios", self.create_directories),
-            ("Criando serviço systemd", self.create_service_file),
-            ("Configurando permissões", self.setup_permissions),
-            ("Configurando logs", self.create_log_file),
-            ("Configurando serviço", self.enable_service),
-            ("Criando scripts de controle", self.create_control_scripts)
-        ]
-        
-        for step_name, step_func in steps:
-            print(f"\n{step_name}...")
-            if not step_func():
-                print(f"\nFalha na etapa: {step_name}")
-                return False
-        
-        self.display_success_info()
+    try:
+        with open("station_control.sh", 'w') as f:
+            f.write(script_content)
+        os.chmod("station_control.sh", 0o755)
+        print("✓ Script de controle criado")
         return True
+    except:
+        print("✗ Erro ao criar script")
+        return False
 
-def main():
-    """Função principal"""
-    installer = BME280Installer()
+def install():
+    """Instala o sistema"""
+    print("=== INSTALADOR BME280 ===")
     
-    if len(sys.argv) > 1 and sys.argv[1] == "uninstall":
-        # Desinstalação
-        print("Desinstalando estação meteorológica...")
-        subprocess.run(["systemctl", "stop", "bme280-station"], check=False)
-        subprocess.run(["systemctl", "disable", "bme280-station"], check=False)
-        subprocess.run(["rm", "-f", "/etc/systemd/system/bme280-station.service"], check=False)
-        subprocess.run(["systemctl", "daemon-reload"], check=False)
-        print("Desinstalação concluída!")
-    else:
-        # Instalação
-        installer.install()
+    if not check_root():
+        return False
+    
+    steps = [
+        install_dependencies,
+        create_service,
+        setup_permissions,
+        enable_service,
+        create_control_script
+    ]
+    
+    for step in steps:
+        if not step():
+            print("✗ Instalação falhou")
+            return False
+    
+    print("\n✓ INSTALAÇÃO CONCLUÍDA!")
+    print("Acesse: http://localhost:5000")
+    print("Controle: ./station_control.sh start|stop|status")
+    return True
+
+def uninstall():
+    """Desinstala o sistema"""
+    print("Desinstalando...")
+    subprocess.run(["systemctl", "stop", "bme280-station"], check=False)
+    subprocess.run(["systemctl", "disable", "bme280-station"], check=False)
+    subprocess.run(["rm", "-f", "/etc/systemd/system/bme280-station.service"], check=False)
+    subprocess.run(["systemctl", "daemon-reload"], check=False)
+    print("✓ Desinstalação concluída")
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "uninstall":
+        uninstall()
+    else:
+        install()
