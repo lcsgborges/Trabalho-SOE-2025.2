@@ -354,12 +354,18 @@ def mainII():
 
     exit(0)
 
- 
-
+def mainInspector():
+    """
+        This only loads the TARGET, prints
+        info and gets out. 
+    """
+    df = pd.read_csv(TARGET, parse_dates=[0], date_format="%Y-%m-%d")
+    #df.info()
+    print(df.describe())
 if __name__ == "__main__":
     #choose one. comment the other. don't run both.
     #testmain()
-    mainII()
+    mainInspector()
     
 
 
