@@ -26,6 +26,6 @@ brevemente explicar onde encontrar informações e documentação.
 
 ## Download do documento
 
-[Baixar PDF](https://github.com/lcsgborges/Trabalho-SOE-2025.2/tree/main/docs/relatorio_pc1.pdf)
+[Baixar PDF](https://github.com/lcsgborges/Trabalho-SOE-2025.2/tree/main/docs/relatorio.pdf)
 
 <!--EXPANDIR CONFORME TRABALHOS REALIZADOS-->
