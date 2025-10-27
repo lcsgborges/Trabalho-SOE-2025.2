@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -lwiringPi
-SRC = main.cpp Adafruit_BME280.cpp
+SRC = main.cpp SensorBME280.cpp
 OUT = bme280_rpi
 
 all:
