@@ -1,4 +1,5 @@
 #include "SensorBME280.h"
+#include "CSVLogger.h"
 #include <iostream>
 #include <unistd.h>
 
@@ -10,6 +11,8 @@ int main() {
         return 1;
     }
 
+    CSVLogger logger("../database/data.csv");
+
     while (true) {
         float temp = sensor.readTemperature();
         float press = sensor.readPressure();
@@ -19,6 +22,8 @@ int main() {
         std::cout << "Pressão: " << press << " hPa" << std::endl;
         std::cout << "Umidade: " << hum << " %" << std::endl;
         std::cout << "--------------------------" << std::endl;
+
+        logger.writeLine(temp, press, hum);
 
         sleep(2);
     }
