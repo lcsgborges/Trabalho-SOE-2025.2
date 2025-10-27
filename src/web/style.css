@@ -1,1 +1,23 @@
-/* CSS FILE */
+body {
+    background-color: antiquewhite;
+}
+
+#titleH1 {
+    text-align: center;
+    font-size: 4rem;
+}
+
+table {
+    border-collapse: collapse;
+    width: 80%;
+    margin: 20px auto;
+}
+th, td {
+    border: 1px solid #333;
+    padding: 8px;
+    text-align: center;
+}
+th {
+    background-color: #555;
+    color: #fff;
+}
