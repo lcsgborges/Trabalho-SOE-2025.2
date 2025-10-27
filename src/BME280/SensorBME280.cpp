@@ -93,30 +93,26 @@ float SensorBME280::readPressure() {
 }
 
 float SensorBME280::readHumidity() {
-    int32_t adc_H = read16(0xFD);
+    int32_t adc_H = (read8(0xFD) << 8) | read8(0xFE);
     int32_t v_x1_u32r;
 
     v_x1_u32r = (t_fine - ((int32_t)76800));
     v_x1_u32r = (((((adc_H << 14) - (((int32_t)dig_H4) << 20) -
-                    (((int32_t)dig_H5) * v_x1_u32r)) +
-                   ((int32_t)16384)) >>
-                  15) *
+                    (((int32_t)dig_H5) * v_x1_u32r)) + ((int32_t)16384)) >> 15) *
                  (((((((v_x1_u32r * ((int32_t)dig_H6)) >> 10) *
-                      (((v_x1_u32r * ((int32_t)dig_H3)) >> 11) + ((int32_t)32768))) >>
-                     10) +
-                    ((int32_t)2097152)) *
-                       ((int32_t)dig_H2) +
-                   8192) >>
-                  14));
+                      (((v_x1_u32r * ((int32_t)dig_H3)) >> 11) +
+                       ((int32_t)32768))) >> 10) + ((int32_t)2097152)) *
+                   ((int32_t)dig_H2) + 8192) >> 14));
 
-    v_x1_u32r =
-        (v_x1_u32r -
-         (((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) * ((int32_t)dig_H1)) >>
-        4;
+    v_x1_u32r = v_x1_u32r - (((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) * ((int32_t)dig_H1);
+    v_x1_u32r = v_x1_u32r >> 4;
 
-    v_x1_u32r = (v_x1_u32r < 0 ? 0 : v_x1_u32r);
-    v_x1_u32r = (v_x1_u32r > 419430400 ? 419430400 : v_x1_u32r);
-    return (v_x1_u32r >> 12) / 1024.0;
+    if (v_x1_u32r < 0)
+        v_x1_u32r = 0;
+    if (v_x1_u32r > 419430400)
+        v_x1_u32r = 419430400;
+
+    return ((float)(v_x1_u32r >> 12)) / 1024.0f;
 }
 
 // Funções auxiliares
