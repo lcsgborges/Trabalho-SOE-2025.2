@@ -29,4 +29,6 @@ The model nomenclature will use the following standard, explained with an exampl
 t24v1 means temperature - 24 - version 1. It means this model uses precisely 24 inputs, outputs 24 predictions and
 is the first version. To load a model and gather a prediction, we have planned to construct a proper loader.
 
+Creating new models and stuff will demand you to alter the trainingscript. Very fun!
+
 
