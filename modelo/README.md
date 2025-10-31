@@ -22,4 +22,11 @@ The model will be following mostly this tutorial from tensorflow:
 Good news is the pavement is already set for our work, we just need this data
 and setting up the model things. Not bad at all.
 
+---
+
+The model nomenclature will use the following standard, explained with an example:
+
+t24v1 means temperature - 24 - version 1. It means this model uses precisely 24 inputs, outputs 24 predictions and
+is the first version. To load a model and gather a prediction, we have planned to construct a proper loader.
+
 
