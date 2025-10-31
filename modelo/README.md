@@ -31,4 +31,4 @@ is the first version. To load a model and gather a prediction, we have planned t
 
 Creating new models and stuff will demand you to alter the trainingscript. Very fun!
 
-
+also, this is the key to our entire fucking stuff -->>> https://github.com/serizba/cppflow
