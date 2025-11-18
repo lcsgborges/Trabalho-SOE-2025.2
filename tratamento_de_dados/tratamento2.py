@@ -1,162 +1,56 @@
 """
+    This is an altered version to handle 
+    the data 2020-2024. The calling card 
+    still holds up, though.    
+
     Written by BCl0c, whose data will produce
     the worst models ever devised by mankind.
 
-    I find my relationship with my code much 
-    related to the expectacle i see in rallying.
-    I hope to one day be coding like mcrae did
-    his driving -> FLAT OUT!
-        Of course, while mcrae did all those things
-        very fast, all I'm able to flat out is 
-        sleeping very little. It is my own way
-        of flatting out, i guess.
+    The initial parts of the .CSVs this script
+    is built to handle are actually trash and were
+    manually removed. They contained some identifying
+    info and stuff, but nothing really useful.
 
-    There's little danger in a desk job, but we can
-    find some in creative ways. Like coding 48 hours
-    straight, finishing that deadline in the last 
-    possible second, not sleeping and not eating. That
-    takes some boldness. You keep pushing until you either
-    solve whatever pulled you in or you DIE. That's a
-    style of desk job working I find the closest to
-    putting your life on the line. Like going to war. 
-    Or driving in autosports. But there's something
-    more akin to golfing in coding, since when things
-    don't go your way, you usually find no one to blame
-    but yourself. Its depressing, but you either hack 
-    it or don't. but we keep coming back. Because 
-    its fun. That and most programmers I've met 
-    are hardcore caffeinated closet masochists.
-
-    1. INTRODUCTION
-        The expectative is that this is able to output 
-        a single clean .csv from the file provided.
-
-        This will be hardcoded for simplicity's sake.
-        Since most probably you'd need to do this 
-        differently for every dataset, there's 
-        no actual advantage to try to make this 
-        general. Pandas is already general enough.
-
-        Anyway, given a good dataset, we need to extract
-        temperature, humidity and pressure, which is the
-        same data our sensor will provide. 
-
-        That all said, IF THERE'S A MIKEFOXTROT
-        INSIDE THIS SCRIPT, it's FOXTROT OVER! Our 
-        model is just as good as the data provided.
-
-        ALPHASIERRA data means an ALPHASIERRA model. 
-
-        As for the data, it was gathered via
-        https://tempo.inmet.gov.br/TabelaEstacoes/A001 
-
-        This script would NOT exist if it were not 
-        for the fact we got a bunch of nulls (aka nan)
-        inside the data. This is a FUCKING MESS of 
-        a dataset, but we'll give it some love. And
-        boy oh boy, you better hope love will be enough,
-        else we're in shit deeper than deep. We fix it 
-        OR ELSE!
-
-    2. THE SCRIPT
-        This works (or is planned to work) as following:
-            1. The data must be located inside the pwd.
-            2. We load everyone inside a dataframe. very good.
-            3. For every file loaded, clean anything 
-                nondesirable, like them FUCKING NANs
-            4. merge and save to a new merged .csv
-            5. be done with it!
-
-    3. THE EVERY STEP DOCUMENTATION AND LOG.
-        this is for the developer (l0c, that's me) to explain 
-        what he's doing.
-
-        3.1. the main function.
-            if name is main, then we run main and that's our
-            entrypoint. anything outside main WILL NOT be 
-            called.
-
-            testmain serves to move fast and break shit up.
-            DO NOT run testmain if you plan on getting
-            something useful, the purpose of testing
-            is acquiring knowledge on operations of
-            the libraries we're using!
-
-        3.2. Loading the .csv's
-            FOR SOME FUCKING REASON inmet decided they
-            would export the COMMA SEPARATED VALUES
-            using SEMICOLONS
-            which is
-            not 
-            great...
-            not at all!
-
-            That said, its an easy fix. sep=";". 
-            there, done.
-
-            Also, new mikefoxtrot found -> 
-                as the csv exported uses 
-                COMMAS to indicate the 
-                floats, we need to set
-                the decimal variable to "," 
-                so read_csv automatically
-                recognizes values.
-            
-            Then setting date is simple task
-            of indicatives. Set the format 
-            and the correct column
-
-        3.3. The inspection.
-            Its an exploratory step to test
-            new pandas functionalities and find out
-            how to do our operations like sniffing for
-            nans and treating them. The BIGSHAME is
-            that there is no easy way of iterating 
-            through the dataset and simply altering
-            the nans. The !correct! way, it seems, 
-            is to create a new series and overwrite
-            it over the og dataframe. Not great, but 
-            it will do. We are indeed handling 
-            only about 12k records with about 13 vars
-            in its domain. Not a big step, but i'd be
-            already FUCKING DONE IF THIS WAS MYSQL FOR
-            FUCK SAKE!
-
-            The approach is simple -> every .csv we 
-            got works about the same. Then, if they're
-            quite similar, if we find an approach that
-            works for one, the others may be handled 
-            the same or mostly the same. 
-
-        3.4. nan sniffing in a row
-            Simple steps. We just return the keys with 
-            nans found. The costs are not stratospheric.
-            
-            Don't be fooled, though. they will mount and
-            this might be what kills us. Good thing 
-            its a dataset of about a megabyte, not half a gig
-            like last time. This means we got plenty of ram
-            to throw around. Not as much time. Wish I had 
-            about a month for this one. 
-
-            
+    All one really needs to know is:
+        1. The data comes from the automatic 
+        weather station in Brasilia - DF, Brazil,
+        our lackluster country.
+        2. The data was gracefully provided for 
+        free by the INMET, a government weather agency.
+        3. The data contains some holes, which we'll
+        interpolate and is the main purpose of this 
+        script, since it is not a very good idea to
+        train any statistical model with such good 
+        values as NANs and NULLs. 
+        4. Listening to aphex twin's "Music From The
+        Merch Desk" during the construction or understan-
+        ding of this script really helps!
 """
 
 import pandas as pd
-import numpy as np
 
+#radkey gets special treatment. It should be zeroed instead of 
+#interp'd
 RADKEY  = "Radiacao (KJ/m²)"
+
+#these controls printings and inspections.
 DEBUG   = 1
 INSPECT = 1
-FILE1   = "./data1-01012023-29062023.csv"
-FILE2   = "./data2-30062023-30122023.csv"
-FILE3   = "./data3-01012024-29062024.csv"
-FILE4   = "./data4-30062024-30122024.csv"
+
+#These are loaded files
+FILE1   = "./INMET_CO_DF_A001_BRASILIA_01-01-2020_A_31-12-2020.csv"
+FILE2   = "./INMET_CO_DF_A001_BRASILIA_01-01-2021_A_31-12-2021.csv"
+FILE3   = "./INMET_CO_DF_A001_BRASILIA_01-01-2022_A_31-12-2022.csv"
+FILE4   = "./INMET_CO_DF_A001_BRASILIA_01-01-2023_A_31-12-2023.csv"
+FILE5   = "./INMET_CO_DF_A001_BRASILIA_01-01-2024_A_31-12-2024.csv"
+
+# this controls the output. use a UNIQUE output name for every script
+# of this type, else you'll have big ass trouble with overwriting.
 TARGET  = "./dataset2.csv"
 
 
 # Latter found out this is already implemented inside 
-# pandas through interpolate.Not great.
+# pandas through interpolate and fillna. Not great.
 def nanhandler(df: pd.DataFrame) -> None:
     """
         passes through every single record
@@ -292,6 +186,7 @@ def main():
     df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
     df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
     df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df5 = pd.read_csv(FILE5, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
 
     # 2. inspection step!
     if INSPECT == 1:
@@ -299,12 +194,11 @@ def main():
         print(df2.info())
         print(df3.info())
         print(df4.info())
+        print(df5.info())
+
 
     # 3. process
-    nanhandler(df1)
-    nanhandler(df2)
-    nanhandler(df3)
-    nanhandler(df4)
+    df1.fillna(axis=)
 
     # 4. second inspection.
     if INSPECT == 1:
@@ -360,7 +254,6 @@ if __name__ == "__main__":
     #choose one. comment the other. don't run both.
     #testmain()
     mainInspector()
-    
 
 
 
