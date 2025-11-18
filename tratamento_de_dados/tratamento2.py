@@ -198,7 +198,7 @@ def main():
 
 
     # 3. process
-    df1.fillna(axis=)
+    #df1.fillna(axis=)
 
     # 4. second inspection.
     if INSPECT == 1:
@@ -250,10 +250,35 @@ def mainInspector():
     df = pd.read_csv(TARGET, parse_dates=[0], date_format="%Y-%m-%d")
     #df.info()
     print(df.describe())
+
+def Inspectfiles():
+    """
+        This only loads the TARGET, prints
+        info and gets out. 
+    """
+    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df5 = pd.read_csv(FILE5, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+
+    print(df1.info())
+    print(df2.info())
+    print(df3.info())
+    print(df4.info())
+    print(df5.info())
+
+    print(df1.describe())
+    print(df2.describe())
+    print(df3.describe())
+    print(df4.describe())
+    print(df5.describe())
+
 if __name__ == "__main__":
     #choose one. comment the other. don't run both.
     #testmain()
-    mainInspector()
+    Inspectfiles()
+
 
 
 
