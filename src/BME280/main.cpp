@@ -14,6 +14,7 @@ int main() {
     CSVLogger logger("/var/www/html/database/data.csv");
 
     while (true) {
+        // IMPORTANTE: Ler temperatura primeiro (necessário para calibração da umidade)
         float temp = sensor.readTemperature();
         float press = sensor.readPressure();
         float hum = sensor.readHumidity();

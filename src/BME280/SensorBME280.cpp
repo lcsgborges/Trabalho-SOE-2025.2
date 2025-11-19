@@ -20,14 +20,16 @@ bool SensorBME280::begin(uint8_t addr) {
 
     // Reset
     write8(0xE0, 0xB6);
-    usleep(2000);
-
-    // Configuração inicial
-    write8(0xF2, 0x01); // umidade oversampling x1
-    write8(0xF4, 0x27); // temp/press oversampling x1, modo normal
-    write8(0xF5, 0xA0); // config standby 1000ms
+    usleep(10000);
 
     readCoefficients();
+
+    // Configuração inicial (ordem importante!)
+    write8(0xF2, 0x05); // umidade oversampling x16
+    write8(0xF4, 0xB7); // temp/press oversampling x16, modo normal
+    write8(0xF5, 0xA0); // config standby 1000ms, filter off
+
+    usleep(100000); // Aguarda estabilização
     return true;
 }
 
@@ -49,8 +51,13 @@ void SensorBME280::readCoefficients() {
     dig_H1 = read8(0xA1);
     dig_H2 = readS16(0xE1);
     dig_H3 = read8(0xE3);
-    dig_H4 = (read8(0xE4) << 4) | (read8(0xE5) & 0x0F);
-    dig_H5 = (read8(0xE6) << 4) | (read8(0xE5) >> 4);
+    
+    int8_t e4 = read8(0xE4);
+    int8_t e5 = read8(0xE5);
+    int8_t e6 = read8(0xE6);
+    
+    dig_H4 = (e4 << 4) | (e5 & 0x0F);
+    dig_H5 = (e6 << 4) | ((e5 >> 4) & 0x0F);
     dig_H6 = (int8_t)read8(0xE7);
 }
 
@@ -93,10 +100,16 @@ float SensorBME280::readPressure() {
 }
 
 float SensorBME280::readHumidity() {
+    // Lê o valor ADC da umidade (16 bits)
     int32_t adc_H = (read8(0xFD) << 8) | read8(0xFE);
+    
+    if (adc_H == 0x8000) // Valor inválido
+        return 0.0f;
+
     int32_t v_x1_u32r;
 
     v_x1_u32r = (t_fine - ((int32_t)76800));
+    
     v_x1_u32r = (((((adc_H << 14) - (((int32_t)dig_H4) << 20) -
                     (((int32_t)dig_H5) * v_x1_u32r)) + ((int32_t)16384)) >> 15) *
                  (((((((v_x1_u32r * ((int32_t)dig_H6)) >> 10) *
@@ -104,15 +117,14 @@ float SensorBME280::readHumidity() {
                        ((int32_t)32768))) >> 10) + ((int32_t)2097152)) *
                    ((int32_t)dig_H2) + 8192) >> 14));
 
-    v_x1_u32r = v_x1_u32r - (((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) * ((int32_t)dig_H1);
-    v_x1_u32r = v_x1_u32r >> 4;
+    v_x1_u32r = (v_x1_u32r - (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) *
+                               ((int32_t)dig_H1)) >> 4));
 
-    if (v_x1_u32r < 0)
-        v_x1_u32r = 0;
-    if (v_x1_u32r > 419430400)
-        v_x1_u32r = 419430400;
-
-    return ((float)(v_x1_u32r >> 12)) / 1024.0f;
+    v_x1_u32r = (v_x1_u32r < 0) ? 0 : v_x1_u32r;
+    v_x1_u32r = (v_x1_u32r > 419430400) ? 419430400 : v_x1_u32r;
+    
+    float h = (float)(v_x1_u32r >> 12);
+    return h / 1024.0f;
 }
 
 // Funções auxiliares
