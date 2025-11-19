@@ -288,7 +288,7 @@ def Inspectfiles():
 if __name__ == "__main__":
     #choose one. comment the other. don't run both.
     #testmain()
-    main()
+    Inspectfiles()
 
 
 
