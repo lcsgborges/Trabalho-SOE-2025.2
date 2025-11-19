@@ -1,0 +1,21 @@
+[Unit]
+Description=Servidor BME280 - Dashboard Web
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/pi/trabalho/src/BME280
+ExecStart=/home/pi/trabalho/src/BME280/bme280_server
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Executar script para mostrar IP após iniciar
+ExecStartPost=/bin/bash -c 'sleep 3 && echo "Servidor BME280 iniciado! Acesse: http://$(hostname -I | awk "{print \$1}"):8080"'
+
+[Install]
+WantedBy=multi-user.target
+

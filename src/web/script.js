@@ -1,9 +1,13 @@
 const table = document.querySelector("#sensorTable tbody");
 const MAX_ROWS = 15;
 
+// URL base do servidor (ajuste se necessário)
+const SERVER_URL = "http://localhost:8080";
+
 async function attData() {
     try {
-        const response = await fetch("../database/data.csv");
+        // Busca o arquivo CSV do servidor
+        const response = await fetch(`${SERVER_URL}/data.csv`);
         const text = await response.text();
         const rows = text.trim().split("\n");
 
@@ -25,11 +29,14 @@ async function attData() {
             })
             table.appendChild(tr);
         })
+        
+        console.log("Tabela atualizada com sucesso");
     } catch(err) {
         console.error("Erro ao ler CSV: ", err);
     }
 }
 
-setInterval(attData, 60000);
+// Atualiza a cada 10 segundos
+setInterval(attData, 10000);
 
 attData();

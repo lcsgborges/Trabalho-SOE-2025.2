@@ -1,11 +1,13 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra
-LDFLAGS = -lwiringPi
+CXXFLAGS = -std=c++17 -Wall -Wextra -pthread
+LDFLAGS = -lwiringPi -lpthread
 
-SRC = main.cpp SensorBME280.cpp CSVLogger.cpp
-OUT = bme280_rpi
+SRC = main.cpp SensorBME280.cpp CSVLogger.cpp HTTPServer.cpp
+OUT = bme280_server
 
-all:
+all: $(OUT)
+
+$(OUT):
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(OUT) $(LDFLAGS)
 
 clean:
