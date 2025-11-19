@@ -10,7 +10,7 @@ echo ""
 
 # Verificar se está rodando na Raspberry Pi
 if [ ! -f /proc/device-tree/model ]; then
-    echo "⚠️  Aviso: Pode não estar rodando em uma Raspberry Pi"
+    echo "Aviso: Pode não estar rodando em uma Raspberry Pi"
 fi
 
 # 1. Atualizar e instalar dependências
@@ -43,7 +43,7 @@ make clean > /dev/null 2>&1
 make > /dev/null 2>&1
 
 if [ ! -f "./bme280_server" ]; then
-    echo "❌ Erro na compilação!"
+    echo "Erro na compilação!"
     exit 1
 fi
 
@@ -58,7 +58,7 @@ echo "[7/7] Configurando scripts..."
 chmod +x start_server.sh check_status.sh
 
 echo ""
-echo "✅ Instalação concluída com sucesso!"
+echo "Instalação concluída com sucesso!"
 echo ""
 echo "═══════════════════════════════════════════════════"
 echo "  PRÓXIMOS PASSOS:"
