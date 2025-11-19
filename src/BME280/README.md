@@ -16,17 +16,18 @@ sudo reboot
 
 ### No navegador (de qualquer dispositivo na mesma rede):
 
-```
+```bash
 http://<IP_DA_RPI>:8080
 ```
 
-### Descobrir o IP da Raspberry Pi:
+### Descobrir o IP da Raspberry Pi
 
 ```bash
 hostname -I
 ```
 
 OU execute:
+
 ```bash
 ./start_server.sh
 ```

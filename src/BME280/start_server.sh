@@ -18,7 +18,7 @@ mkdir -p ../database
 
 # Verificar I2C
 if ! ls /dev/i2c-* 1> /dev/null 2>&1; then
-    echo "❌ I2C não detectado. Execute: sudo raspi-config -> Interface Options -> I2C"
+    echo "I2C não detectado. Execute: sudo raspi-config -> Interface Options -> I2C"
     exit 1
 fi
 
@@ -32,12 +32,12 @@ sleep 2
 IP=$(hostname -I | awk '{print $1}')
 
 echo ""
-echo "✅ Servidor rodando em background!"
+echo "Servidor rodando em background!"
 echo ""
 echo "┌─────────────────────────────────────────┐"
 echo "│  Acesse o Dashboard:                    │"
 echo "│                                         │"
-echo "│  http://$IP:8080           │"
+echo "│  http://$IP:8080                        │"
 echo "│                                         │"
 echo "└─────────────────────────────────────────┘"
 echo ""
