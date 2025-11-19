@@ -61,15 +61,6 @@ else
     echo "Serviço systemd: INATIVO"
 fi
 
-# Verificar logs recentes
-echo ""
-echo "--- Últimas 5 linhas do log ---"
-if [ -f /tmp/bme280.log ]; then
-    tail -5 /tmp/bme280.log
-else
-    echo "(Nenhum log encontrado em /tmp/bme280.log)"
-fi
-
 echo ""
 echo "Comandos úteis:"
 echo "  Ver logs completos: tail -f /tmp/bme280.log"
