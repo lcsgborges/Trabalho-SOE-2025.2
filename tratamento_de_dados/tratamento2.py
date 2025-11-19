@@ -198,7 +198,17 @@ def main():
 
 
     # 3. process
-    #df1.fillna(axis=)
+    df1 = df1.fillna(value={"RADIACAO GLOBAL (Kj/m2)": 0})
+    df2 = df2.fillna(value={"RADIACAO GLOBAL (Kj/m2)": 0})
+    df3 = df3.fillna(value={"RADIACAO GLOBAL (Kj/m2)": 0})
+    df4 = df4.fillna(value={"RADIACAO GLOBAL (Kj/m2)": 0})
+    df5 = df5.fillna(value={"RADIACAO GLOBAL (Kj/m2)": 0})
+
+    df1 = df1.interpolate()
+    df2 = df2.interpolate()
+    df3 = df3.interpolate()
+    df4 = df4.interpolate()
+    df5 = df5.interpolate()
 
     # 4. second inspection.
     if INSPECT == 1:
@@ -206,9 +216,10 @@ def main():
         print(df2.info())
         print(df3.info())
         print(df4.info())
+        print(df5.info())
 
     # the merging
-    bigdf = pd.DataFrame(pd.concat([df1, df2, df3, df4]))
+    bigdf = pd.DataFrame(pd.concat([df1, df2, df3, df4, df5]))
     #nanhandler(bigdf)
 
     # not bad!
@@ -256,11 +267,11 @@ def Inspectfiles():
         This only loads the TARGET, prints
         info and gets out. 
     """
-    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df5 = pd.read_csv(FILE5, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df5 = pd.read_csv(FILE5, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
 
     print(df1.info())
     print(df2.info())
@@ -277,7 +288,7 @@ def Inspectfiles():
 if __name__ == "__main__":
     #choose one. comment the other. don't run both.
     #testmain()
-    Inspectfiles()
+    main()
 
 
 
