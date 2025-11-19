@@ -10,8 +10,8 @@ int main() {
         std::cout << "Falha ao iniciar BME280" << std::endl;
         return 1;
     }
-
-    CSVLogger logger("../database/data.csv");
+    //altered to send directly to apache's root.
+    CSVLogger logger("/var/www/html/database/data.csv");
 
     while (true) {
         float temp = sensor.readTemperature();
