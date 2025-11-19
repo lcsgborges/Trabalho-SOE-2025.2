@@ -182,11 +182,11 @@ def main():
     # format, sep needs to be ; or else. Anyway,
 
     #THIS IS OUR DATA, THE TARGET OF THIS SCRIPT!
-    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
-    df5 = pd.read_csv(FILE5, sep=";", decimal=",", parse_dates=[0], date_format="%d/%m/%Y")
+    df1 = pd.read_csv(FILE1, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df2 = pd.read_csv(FILE2, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df3 = pd.read_csv(FILE3, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df4 = pd.read_csv(FILE4, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
+    df5 = pd.read_csv(FILE5, sep=";", decimal=",", parse_dates=[0], date_format="%Y/%m/%d")
 
     # 2. inspection step!
     if INSPECT == 1:

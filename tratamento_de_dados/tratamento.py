@@ -152,7 +152,7 @@ FILE1   = "./data1-01012023-29062023.csv"
 FILE2   = "./data2-30062023-30122023.csv"
 FILE3   = "./data3-01012024-29062024.csv"
 FILE4   = "./data4-30062024-30122024.csv"
-TARGET  = "./dataset2.csv"
+TARGET  = "./dataset1.csv"
 
 
 # Latter found out this is already implemented inside 
@@ -358,7 +358,7 @@ def mainInspector():
     print(df.describe())
 if __name__ == "__main__":
     #choose one. comment the other. don't run both.
-    #testmain()
+    main()
     mainInspector()
     
 
