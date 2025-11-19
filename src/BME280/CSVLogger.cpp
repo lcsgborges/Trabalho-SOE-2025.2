@@ -35,13 +35,17 @@ void CSVLogger::writeHeader(const std::string& header) {
 void CSVLogger::writeLine(float temperature, float pressure, float humidity) {
     if (!file.is_open()) return;
 
-    // obtém tempo atual em UTC
+    // Obtém tempo atual em UTC
     auto now = std::chrono::system_clock::now();
     std::time_t t = std::chrono::system_clock::to_time_t(now);
-    std::tm* utc_tm = std::gmtime(&t);
+    
+    // Converte para horário de Brasília (UTC-3)
+    // Subtrai 3 horas (3 * 60 * 60 segundos)
+    t -= 3 * 60 * 60;
+    std::tm* brasilia_tm = std::gmtime(&t);
 
-    file << std::put_time(utc_tm, "%d/%m/%Y") << ",";
-    file << std::put_time(utc_tm, "%H:%M:%S") << ",";
+    file << std::put_time(brasilia_tm, "%d/%m/%Y") << ",";
+    file << std::put_time(brasilia_tm, "%H:%M:%S") << ",";
 
     file << temperature << "," << pressure << "," << humidity << "\n";
 
