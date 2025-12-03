@@ -1,4 +1,5 @@
 #include "HTTPServer.h"
+#include "CSVLogger.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -88,15 +89,13 @@ void HTTPServer::handleClient(int client_socket) {
             sendResponse(client_socket, 404, "text/plain", "Data callback not set");
         }
     }
-    // Servir arquivo CSV
+    // Servir arquivo CSV de forma thread-safe
     else if (path.find("data.csv") != std::string::npos) {
-        std::ifstream csvFile("../database/data.csv");
-        if (csvFile.is_open()) {
-            std::stringstream buffer;
-            buffer << csvFile.rdbuf();
-            sendResponse(client_socket, 200, "text/csv", buffer.str());
+        std::string csvContent = CSVLogger::readCSVFile("../database/data.csv");
+        if (!csvContent.empty()) {
+            sendResponse(client_socket, 200, "text/csv", csvContent);
         } else {
-            sendResponse(client_socket, 404, "text/plain", "CSV file not found");
+            sendResponse(client_socket, 404, "text/plain", "CSV file not found or empty");
         }
     }
     // Servir arquivos estáticos

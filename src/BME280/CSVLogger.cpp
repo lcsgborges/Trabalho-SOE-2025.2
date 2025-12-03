@@ -1,9 +1,14 @@
 #include "CSVLogger.h"
 #include <iostream>
+#include <sstream>
+
+// Definição do mutex global
+std::mutex csv_file_mutex;
 
 CSVLogger::CSVLogger(const std::string& fileName)
     : path(fileName), writtenHeader(false)
 {
+    std::lock_guard<std::mutex> lock(csv_file_mutex);
     file.open(path, std::ios::app);
 
     if (!file.is_open()) {
@@ -19,6 +24,7 @@ CSVLogger::CSVLogger(const std::string& fileName)
 }
 
 CSVLogger::~CSVLogger() {
+    std::lock_guard<std::mutex> lock(csv_file_mutex);
     if (file.is_open()) {
         file.close();
     }
@@ -33,6 +39,8 @@ void CSVLogger::writeHeader(const std::string& header) {
 }
 
 void CSVLogger::writeLine(float temperature, float pressure, float humidity) {
+    std::lock_guard<std::mutex> lock(csv_file_mutex);
+    
     if (!file.is_open()) return;
 
     // Obtém tempo atual em UTC
@@ -50,4 +58,19 @@ void CSVLogger::writeLine(float temperature, float pressure, float humidity) {
     file << temperature << "," << pressure << "," << humidity << "\n";
 
     file.flush();
+}
+
+std::string CSVLogger::readCSVFile(const std::string& filePath) {
+    std::lock_guard<std::mutex> lock(csv_file_mutex);
+    
+    std::ifstream csvFile(filePath);
+    if (!csvFile.is_open()) {
+        return "";
+    }
+    
+    std::stringstream buffer;
+    buffer << csvFile.rdbuf();
+    csvFile.close();
+    
+    return buffer.str();
 }

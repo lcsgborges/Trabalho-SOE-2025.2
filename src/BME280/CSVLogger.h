@@ -6,6 +6,10 @@
 #include <ctime>
 #include <iomanip>
 #include <chrono>
+#include <mutex>
+
+// Mutex global para sincronizar acesso ao arquivo CSV
+extern std::mutex csv_file_mutex;
 
 class CSVLogger {
     private:
@@ -19,6 +23,9 @@ class CSVLogger {
 
         void writeHeader(const std::string& header);
         void writeLine(float temperature, float pressure, float humidity);
+        
+        // Método estático para ler o arquivo CSV de forma thread-safe
+        static std::string readCSVFile(const std::string& filePath);
 };
 
 #endif
