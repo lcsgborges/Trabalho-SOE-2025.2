@@ -37,6 +37,7 @@ if command -v python3 &> /dev/null; then
     # Verificar se o script de predição existe
     if [ -f "$PREDICTION_SERVER" ]; then
         echo "Iniciando servidor de predições (IA) em background..."
+	cd /home/pi/trabalho/model; source venv/bin/activate 
         nohup python3 "$PREDICTION_SERVER" > /tmp/prediction_server.log 2>&1 &
         PREDICTION_PID=$!
         sleep 2
