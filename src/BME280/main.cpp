@@ -59,7 +59,7 @@ void sensorThread() {
 
         logger.writeLine(temp, press, hum);
 
-        sleep(10);
+        sleep(60);
     }
 }
 

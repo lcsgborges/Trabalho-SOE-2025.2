@@ -3,26 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <title>Dados do sensor BME280</title>
 </head>
 <body>
-    <h1 id="titleH1">Leituras do sensor</h1>
+    <div class="container">
+        <h1 id="titleH1"><i class="fas fa-temperature-half"></i> Monitoramento Climático</h1>
+        <p class="subtitle">Sensor BME280 - Temperatura, Pressão e Umidade</p>
 
-    <table id="sensorTable">
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Hora (Brasília)</th>
-                <th>Temperatura (°C)</th>
-                <th>Pressão (hPa)</th>
-                <th>Umidade (%)</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- linhas serão preenchidas pelo script.js -->
-        </tbody>
-    </table>
+        <div class="main-content">
+            <!-- Seção da Tabela de Dados -->
+            <section class="data-section">
+                <h2><i class="fas fa-table"></i> Últimas Leituras</h2>
+                <p class="section-desc">Últimos 10 registros do sensor (mais recentes primeiro)</p>
+                <div class="table-container">
+                    <table id="sensorTable">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Hora</th>
+                                <th>Temp (°C)</th>
+                                <th>Pressão (hPa)</th>
+                                <th>Umidade (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- linhas serão preenchidas pelo script.js -->
+                        </tbody>
+                    </table>
+                </div>
+                <p class="update-info"><i class="fas fa-sync-alt"></i> Atualização automática a cada 60 segundos</p>
+            </section>
+
+            <!-- Seção de Predições de IA -->
+            <section class="prediction-section">
+                <h2> Predições de Temperatura (IA)</h2>
+                <p class="section-desc">Previsões baseadas em modelo de Machine Learning</p>
+                
+                <div class="prediction-cards">
+                    <!-- Predição 24 horas -->
+                    <div class="prediction-card">
+                        <div class="prediction-icon"><i class="fas fa-clock"></i></div>
+                        <h3>Próximas 24 Horas</h3>
+                        <div class="prediction-value" id="pred24h">
+                            <span class="temp-value">--</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                        <p class="prediction-label">Temperatura prevista</p>
+                        <p class="model-info">Modelo: t24v1.keras</p>
+                    </div>
+
+                    <!-- Predição 120 horas (5 dias) -->
+                    <div class="prediction-card">
+                        <div class="prediction-icon"><i class="fas fa-calendar-days"></i></div>
+                        <h3>Próximos 5 Dias</h3>
+                        <div class="prediction-value" id="pred120h">
+                            <span class="temp-value">--</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                        <p class="prediction-label">Temperatura prevista</p>
+                        <p class="model-info">Modelo: t120v1.keras</p>
+                    </div>
+                </div>
+
+                <div class="prediction-status">
+                    <p id="predictionStatus"><i class="fas fa-hourglass-half"></i> Aguardando dados para predição...</p>
+                    <p class="last-update">Última atualização: <span id="lastPredUpdate">--</span></p>
+                </div>
+
+                <!-- Placeholder para gráfico futuro -->
+                <div class="chart-placeholder">
+                    <div class="chart-icon"><i class="fas fa-chart-line"></i></div>
+                    <p>Gráfico de tendência (em desenvolvimento)</p>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>Trabalho SOE 2025.2 - Sensor BME280 com Predição por IA</p>
+        </footer>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>
