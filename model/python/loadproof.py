@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-MODELPATH = './t120v1.keras'
+MODELPATH = '../t120v1.keras'
 TARGET    = './../tratamento_de_dados/dataset2.csv'
 TARGET2   = './mini.csv'
 CONV_WIDTH = 3
