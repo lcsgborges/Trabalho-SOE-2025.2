@@ -32,6 +32,13 @@ last_predictions = {
     "message": "Aguardando dados suficientes"
 }
 
+def load_testing_csv(range: list = None) -> pd.DataFrame :
+    df.read_csv(MINICSV)
+    if(range != None):
+        df = df[range[0]:range[1]]
+
+    return df
+
 def load_models():
     """Carrega os modelos Keras"""
     global model_24h, model_120h
@@ -129,7 +136,7 @@ def prepare_input_data(temperatures, input_size=120):
     ])
     
     # Empilhar as 3 features: shape (input_size, 3)
-    inp = np.column_stack([temp_ins, temp_max, temp_min])
+    inp = np.column_stack([temp_ins, temp_min, temp_max])
     
     # Normalizar
     mean = inp.mean()
