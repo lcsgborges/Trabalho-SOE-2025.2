@@ -8,7 +8,8 @@ const predictionStatus = document.getElementById("predictionStatus");
 const lastPredUpdate = document.getElementById("lastPredUpdate");
 
 // Configuração do servidor de predição
-const PREDICTION_SERVER = "http://localhost:5000";
+// Usa o mesmo hostname da página, mas porta 5000
+const PREDICTION_SERVER = `http://${window.location.hostname}:5000`;
 
 // Armazenar dados para exibição
 let sensorData = [];
